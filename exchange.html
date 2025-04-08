@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เติมเงิน - ระบบจัดการบอท</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            flex: 1;
+            padding: 20px;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .exchange-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .alert {
+            border-radius: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .exchange-rate {
+            font-size: 1.1em;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-robot me-2"></i>ระบบจัดการบอท
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">หน้าหลัก</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/exchange.html">เติมเงิน</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="creditsDisplay">
+                            <i class="fas fa-coins me-1"></i>เครดิต: 0
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="usernameDisplay"></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logoutButton">
+                            <i class="fas fa-sign-out-alt me-1"></i>ออกจากระบบ
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="exchange-form">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">
+                        <i class="fas fa-wallet me-2"></i>เติมเงิน
+                    </h2>
+                    
+                    <div class="exchange-rate text-center">
+                        <i class="fas fa-exchange-alt me-2"></i>อัตราแลกเปลี่ยน: 1 บาท = 10 เครดิต
+                    </div>
+
+                    <div id="alertArea"></div>
+
+                    <form id="truemoneyForm" class="mb-4">
+                        <div class="mb-3">
+                            <label for="voucherUrl" class="form-label">
+                                <i class="fas fa-link me-1"></i>ลิงก์ซองของขวัญทรูมันนี่
+                            </label>
+                            <input type="text" class="form-control" id="voucherUrl" 
+                                placeholder="https://gift.truemoney.com/campaign/?v=..." required>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>คัดลอกลิงก์จากซองของขวัญทรูมันนี่มาวางที่นี่
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="submitButton">
+                            <i class="fas fa-money-bill-wave me-2"></i>เติมเงิน
+                        </button>
+                    </form>
+
+                    <div class="text-center">
+                        <p class="mb-2"><strong>วิธีการเติมเงิน:</strong></p>
+                        <ol class="text-start">
+                            <li>เปิดแอป TrueMoney Wallet</li>
+                            <li>เลือก "ส่งของขวัญ"</li>
+                            <li>กำหนดจำนวนเงินที่ต้องการเติม</li>
+                            <li>คัดลอกลิงก์ซองของขวัญ</li>
+                            <li>วางลิงก์ในช่องด้านบนแล้วกดเติมเงิน</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+        }
+
+        document.getElementById('usernameDisplay').textContent = username;
+
+        // แสดงเครดิตปัจจุบัน
+        async function updateCredits() {
+            try {
+                const response = await fetch(`/credits/${username}`);
+                const data = await response.json();
+                document.getElementById('creditsDisplay').innerHTML = 
+                    `<i class="fas fa-coins me-1"></i>เครดิต: ${data.credits || 0}`;
+            } catch (error) {
+                console.error('Error fetching credits:', error);
+            }
+        }
+        updateCredits();
+
+        // จัดการการออกจากระบบ
+        document.getElementById('logoutButton').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('username');
+            window.location.href = '/login.html';
+        });
+
+        // จัดการการส่งฟอร์ม
+        document.getElementById('truemoneyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = document.getElementById('submitButton');
+            const alertArea = document.getElementById('alertArea');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>กำลังดำเนินการ...';
+
+            try {
+                const voucherUrl = document.getElementById('voucherUrl').value;
+                const response = await fetch('/payment/truemoney', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        voucherUrl
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alertArea.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5><i class="fas fa-check-circle me-2"></i>เติมเงินสำเร็จ!</h5>
+                            <p class="mb-1">จำนวนเงิน: ${data.amount} บาท</p>
+                            <p class="mb-1">ได้รับเครดิต: ${data.creditsReceived} เครดิต</p>
+                            <p class="mb-0">เครดิตคงเหลือ: ${data.newCredits} เครดิต</p>
+                        </div>
+                    `;
+                    document.getElementById('voucherUrl').value = '';
+                    updateCredits();
+                } else {
+                    let errorMessage = data.error;
+                    let additionalInfo = '';
+                    
+                    if (data.voucherInfo) {
+                        additionalInfo = `
+                            <hr>
+                            <p class="mb-1">มูลค่า: ${data.voucherInfo.amount} บาท</p>
+                            <p class="mb-1">ใช้แล้ว: ${data.voucherInfo.redeemed}/${data.voucherInfo.total}</p>
+                            <p class="mb-0">หมดอายุ: ${data.voucherInfo.expireDate}</p>
+                        `;
+                    }
+
+                    alertArea.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i>เกิดข้อผิดพลาด</h5>
+                            <p class="mb-0">${errorMessage}</p>
+                            ${additionalInfo}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                alertArea.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-triangle me-2"></i>เกิดข้อผิดพลาด</h5>
+                        <p class="mb-0">ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้</p>
+                    </div>
+                `;
+                console.error('Error:', error);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-money-bill-wave me-2"></i>เติมเงิน';
+            }
+        });
+    </script>
+</body>
+</html>

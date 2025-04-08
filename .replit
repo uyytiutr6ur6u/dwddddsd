@@ -1,0 +1,50 @@
+modules = ["web", "nodejs-20"]
+hidden = [".config", "package-lock.json"]
+run = "node index.js"
+
+[gitHubImport]
+requiredFiles = [".replit", "replit.nix", "package.json", "package-lock.json"]
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["sh", "-c", "node index.js"]
+deploymentTarget = "autoscale"
+ignorePorts = false
+
+[workflows]
+runButton = "Run"
+
+[[workflows.workflow]]
+name = "Run"
+author = 40993036
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node index.js"
+
+[[ports]]
+localPort = 3000
+externalPort = 80
+
+[[ports]]
+localPort = 3111
+externalPort = 3000
+
+[[ports]]
+localPort = 3221
+externalPort = 3002
+
+[[ports]]
+localPort = 4111
+externalPort = 3001
+
+[[ports]]
+localPort = 4545
+externalPort = 3003
+
+[[ports]]
+localPort = 5000
+externalPort = 5000

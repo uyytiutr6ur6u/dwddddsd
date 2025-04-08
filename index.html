@@ -1,0 +1,1935 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แดชบอร์ดบอท - Modern</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Animate.css for SweetAlert2 animations -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <!-- CodeMirror CSS and JS for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #1a1a2e; /* Dark blue/purple */
+            --bg-secondary: #2a2a3f; /* Lighter shade */
+            --bg-tertiary: #1f1f34; /* Slightly different dark */
+            --text-primary: #e0e0ff; /* Light lavender */
+            --text-secondary: #a0a0cc; /* Muted lavender */
+            --accent-primary: #8a4af3; /* Vibrant Purple */
+            --accent-secondary: #4c5fdc; /* Vibrant Blue */
+            --gradient-primary: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+            --success: #28a745; /* Green */
+            --danger: #dc3545; /* Red */
+            --warning: #ffc107; /* Yellow */
+            --info: #17a2b8; /* Teal */
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --shadow-light-color: rgba(138, 74, 243, 0.2); /* Accent shadow */
+            --font-sans: 'Poppins', sans-serif;
+            --font-mono: 'IBM Plex Mono', monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 15px;
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        h1, h2, h3 {
+            font-weight: 600;
+            margin-bottom: 0.75em;
+            color: var(--text-primary);
+        }
+
+        h1 {
+            font-size: 1.8em;
+            text-align: center;
+            color: var(--light);
+            margin: 20px 0 30px 0;
+            text-shadow: 0 2px 4px var(--shadow-color);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 1.4em;
+            border-left: 4px solid var(--accent-primary);
+            padding-left: 10px;
+            margin-top: 20px;
+        }
+
+        h3 {
+            font-size: 1.1em;
+            color: var(--text-primary);
+        }
+
+        /* --- Card Base Style --- */
+        .card {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card:hover {
+            /* transform: translateY(-3px); */
+            box-shadow: 0 8px 20px var(--shadow-color), 0 0 15px var(--shadow-light-color);
+        }
+
+        /* --- Header --- */
+        #header {
+            background: var(--bg-secondary);
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 15px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-grow: 1; /* Allow user info to take space */
+        }
+        .user-icon i {
+            font-size: 2.5em;
+            color: var(--accent-primary);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 5px var(--shadow-light-color));
+        }
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+        #currentUserDisplay {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: var(--light);
+        }
+        .credit-badge {
+            display: inline-flex; /* Changed to inline-flex */
+            align-items: center;
+            gap: 5px;
+            background: rgba(138, 74, 243, 0.15);
+            color: var(--accent-primary);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+            border: 1px solid rgba(138, 74, 243, 0.3);
+            margin-top: 5px;
+        }
+        .credit-badge i {
+            color: var(--accent-primary);
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- Buttons --- */
+        button {
+            padding: 10px 18px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em; /* Adjusted size */
+            font-family: var(--font-sans);
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* Space between icon and text */
+            text-transform: capitalize;
+        }
+        button i { margin: 0; /* Remove default margin */}
+
+        .btn { /* Base button class */
+            background-color: var(--bg-tertiary);
+            color: var(--text-secondary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .btn:hover {
+            background-color: #3a3a5e; /* Darken slightly */
+            color: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary { background: var(--gradient-primary); color: var(--light); box-shadow: 0 4px 10px var(--shadow-light-color); }
+        .btn-primary:hover { filter: brightness(1.15); box-shadow: 0 6px 15px var(--shadow-light-color); }
+
+        .btn-success { background-color: var(--success); color: var(--light); }
+        .btn-success:hover { background-color: #218838; }
+
+        .btn-danger { background-color: var(--danger); color: var(--light); }
+        .btn-danger:hover { background-color: #c82333; }
+
+        .btn-warning { background-color: var(--warning); color: var(--dark); }
+        .btn-warning:hover { background-color: #e0a800; }
+
+        .btn-info { background-color: var(--info); color: var(--light); }
+        .btn-info:hover { background-color: #138496; }
+
+        .btn-secondary { background-color: var(--bg-tertiary); color: var(--text-secondary); }
+        .btn-secondary:hover { background-color: #3a3a5e; color: var(--text-primary); }
+
+        .btn-icon { /* For buttons with only an icon */
+             padding: 10px;
+             min-width: 40px; /* Ensure minimum size */
+        }
+
+        .exchange-btn {
+            background: var(--gradient-primary);
+            color: var(--light);
+            border-radius: 25px;
+            padding: 8px 16px;
+            font-size: 0.9em;
+            box-shadow: 0 4px 10px var(--shadow-light-color);
+            margin-top: 10px; /* Added margin */
+        }
+        .exchange-btn:hover {
+            filter: brightness(1.15);
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 6px 15px var(--shadow-light-color);
+        }
+
+        /* --- Forms & Inputs --- */
+        .input-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 1em;
+            font-family: var(--font-sans); /* Use sans-serif for regular inputs */
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="file"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(138, 74, 243, 0.25);
+        }
+        input[type="file"] {
+            padding: 10px; /* Adjust padding for file input */
+            cursor: pointer;
+        }
+        /* Style file input button */
+        input[type="file"]::file-selector-button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            background: var(--gradient-primary);
+            color: var(--light);
+            cursor: pointer;
+            transition: filter 0.2s ease;
+            margin-right: 10px;
+            font-weight: 500;
+        }
+        input[type="file"]::file-selector-button:hover {
+            filter: brightness(1.15);
+        }
+
+        .upload-status {
+            margin-top: 10px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        .status-success { color: var(--success); }
+        .status-error { color: var(--danger); }
+
+        .loading-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--accent-primary);
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress {
+            height: 100%;
+            background: var(--gradient-primary);
+            transition: width 0.3s ease;
+        }
+
+        /* --- Bot Container --- */
+        .bot-container {
+            /* Uses .card styles */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .bot-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .bot-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: var(--light);
+            margin: 0; /* Reset margin */
+            flex-grow: 1;
+        }
+        .bot-status {
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+        }
+        .status-running { background-color: rgba(40, 167, 69, 0.2); color: var(--success); border: 1px solid rgba(40, 167, 69, 0.5); }
+        .status-stopped { background-color: rgba(220, 53, 69, 0.2); color: var(--danger); border: 1px solid rgba(220, 53, 69, 0.5); }
+        .bot-details p {
+            margin-bottom: 5px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+        .bot-details strong {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .bot-actions {
+            display: flex;
+            flex-wrap: wrap; /* Allow buttons to wrap */
+            gap: 8px; /* Spacing between buttons */
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+            margin-top: 10px;
+        }
+        .install-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-grow: 1; /* Allow input to take space */
+            min-width: 200px; /* Ensure minimum width */
+        }
+        .install-group input[type="text"] {
+             flex-grow: 1;
+             margin: 0; /* Reset margin */
+             padding: 8px 12px; /* Smaller padding */
+             font-size: 0.9em;
+        }
+         .install-group button {
+            margin: 0; /* Reset margin */
+        }
+
+        /* --- Terminal --- */
+        .terminal {
+            background: #000000; /* Pure black background like TERMUX */
+            border: 1px solid var(--border-color);
+            border-radius: 8px 8px 0 0;
+            height: 250px;
+            overflow-y: auto;
+            padding: 15px;
+            font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            font-size: 13px;
+            color: #FFFFFF; /* Pure white text */
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-primary) #000000;
+            line-height: 1.4;
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.3); /* Slight glow effect */
+        }
+
+        /* Custom Scrollbar for Webkit */
+        .terminal::-webkit-scrollbar {
+            width: 8px;
+        }
+        .terminal::-webkit-scrollbar-track {
+            background: #000000;
+            border-radius: 0 8px 0 0;
+        }
+        .terminal::-webkit-scrollbar-thumb {
+            background-color: var(--accent-primary);
+            border-radius: 10px;
+            border: 2px solid #000000;
+        }
+
+        .terminal div {
+            padding: 4px 0;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        /* Log message styling with TERMUX-like colors */
+        .terminal .log-info { color: #00FFA3; } /* Bright cyan/green */
+        .terminal .log-info::before { content: 'ℹ️ [ข้อมูล] '; color: #00FFA3; font-weight: bold; }
+
+        .terminal .log-result { color: #00FF00; } /* Bright green */
+        .terminal .log-result::before { content: '✅ [ผลลัพธ์] '; color: #00FF00; font-weight: bold; }
+
+        .terminal .log-error { color: #FF0000; } /* Bright red */
+        .terminal .log-error::before { content: '❌ [ผิดพลาด] '; color: #FF0000; font-weight: bold; }
+
+        .terminal .log-command { color: #FFFF00; font-style: italic; } /* Bright yellow */
+        .terminal .log-command::before { content: '$ '; } /* Changed to TERMUX-like prompt */
+
+        .terminal-input-container {
+            display: flex;
+            background: #000000; /* Match terminal background */
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 5px 10px;
+        }
+
+        .terminal-input-container input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #FFFFFF;
+            font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+            font-size: 13px;
+            padding: 8px 5px;
+        }
+
+        .terminal-input-container input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Fullscreen terminal styles */
+        .fullscreen {
+            background: #000000 !important;
+        }
+
+        .fullscreen-input-container {
+            background: #000000 !important;
+        }
+
+        .terminal-container {
+            margin-top: 15px;
+            position: relative;
+        }
+        .terminal-input-container {
+            display: flex;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-top: none; /* Remove top border */
+            border-radius: 0 0 8px 8px; /* Rounded bottom corners */
+            padding: 5px 10px;
+        }
+        .terminal-input-container input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            padding: 8px 5px;
+        }
+        .terminal-input-container input:focus {
+            outline: none;
+            box-shadow: none; /* Remove focus shadow inside terminal */
+        }
+
+        /* Fullscreen Terminal */
+        .fullscreen {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - 50px) !important; /* Adjust height for input */
+            z-index: 1000;
+            border-radius: 0 !important;
+            max-height: none !important;
+            background: #000000 !important; /* Make sure background is pure black in fullscreen */
+            border: none !important;
+            padding: 20px !important;
+        }
+        .fullscreen-container { /* Parent container in fullscreen */
+            position: fixed !important;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 999;
+            background: #000000; /* Set container background to black too */
+            display: flex;
+            flex-direction: column;
+        }
+        .fullscreen-input-container { /* Input in fullscreen */
+            position: fixed !important;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001;
+            background: #000000 !important; /* Make input container black too */
+            border-top: 1px solid var(--border-color) !important;
+            border-radius: 0 !important;
+            padding: 10px 20px !important;
+        }
+
+        .minimize-btn-container {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1002;
+        }
+
+        /* --- Modal --- */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            outline: 0;
+            background-color: rgba(0, 0, 0, 0.7); /* Darker backdrop */
+            justify-content: center;
+            align-items: center;
+            padding: 15px; /* Padding for small screens */
+        }
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px var(--shadow-color);
+            width: 95%;
+            max-width: 900px; /* Max width for large screens */
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            animation: fadeInScale 0.3s ease-out;
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.2em;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-header h3 .bot-name {
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+        .modal-header button.close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5em;
+            padding: 0;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.2s ease;
+        }
+        .modal-header button.close-btn:hover {
+            color: var(--danger);
+            opacity: 1;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto; /* Scroll only the body */
+            flex-grow: 1;
+        }
+        .editor-container {
+            display: flex;
+            flex-direction: column; /* Stack vertically on small screens */
+            gap: 15px;
+            min-height: 300px; /* Ensure minimum height */
+        }
+        .file-tree-container {
+            background: var(--bg-tertiary);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            flex-shrink: 0; /* Prevent shrinking too much */
+        }
+        .file-tree {
+            max-height: 300px; /* Limit height */
+            overflow-y: auto;
+            font-size: 0.9em;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-primary) var(--bg-tertiary);
+        }
+        /* Custom Scrollbar for File Tree */
+        .file-tree::-webkit-scrollbar { width: 6px; }
+        .file-tree::-webkit-scrollbar-track { background: var(--bg-tertiary); border-radius: 3px; }
+        .file-tree::-webkit-scrollbar-thumb { background-color: var(--accent-primary); border-radius: 3px; }
+
+        .file-tree ul {
+            list-style: none;
+            padding-left: 15px; /* Indentation */
+            margin: 0;
+        }
+        .file-tree li {
+            margin: 6px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            transition: color 0.2s ease;
+            padding: 3px 5px;
+            border-radius: 4px;
+        }
+        .file-tree li.folder::before { content: '\f07b'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--warning); }
+        .file-tree li.file::before { content: '\f15b'; font-family: 'Font Awesome 6 Free'; font-weight: 400; color: var(--info); }
+        .file-tree li.file:hover { color: var(--accent-primary); }
+        .file-tree li.selected {
+            background: rgba(138, 74, 243, 0.2);
+            color: var(--light);
+        }
+        #codeEditor {
+            flex-grow: 1; /* Take remaining space */
+            min-height: 250px; /* Minimum height */
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            font-family: var(--font-mono); /* Monospace for code */
+            font-size: 13px;
+            resize: vertical; /* Allow vertical resize */
+            border-radius: 8px;
+        }
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .editor-container {
+                flex-direction: row; /* Side-by-side on larger screens */
+                min-height: 400px;
+            }
+            .file-tree-container {
+                width: 35%; /* Adjust width */
+                max-width: 300px;
+            }
+            #codeEditor {
+                width: 65%;
+            }
+            .header-content {
+                flex-wrap: nowrap; /* Prevent wrapping on larger screens */
+            }
+        }
+        @media (max-width: 576px) {
+            h1 { font-size: 1.5em; margin-bottom: 20px;}
+            h2 { font-size: 1.2em; }
+            button { font-size: 0.85em; padding: 8px 14px; }
+            .bot-actions { justify-content: center; } /* Center buttons on small screens */
+            .install-group { flex-direction: column; align-items: stretch; } /* Stack install input/button */
+             .install-group input[type="text"] { width: 100%; }
+             .install-group button { width: 100%; } /* Make install button full width */
+            .header-content { flex-direction: column; align-items: flex-start;} /* Stack header items */
+        }
+
+        /* --- SweetAlert2 Animations --- */
+        @keyframes glow {
+            from { box-shadow: 0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary), 0 0 30px var(--accent-primary); }
+            to { box-shadow: 0 0 20px var(--accent-primary), 0 0 30px var(--accent-primary), 0 0 40px var(--accent-primary); }
+        }
+
+        .swal2-icon.swal2-success {
+            border-color: var(--success) !important;
+        }
+
+        .swal2-icon.swal2-success [class^=swal2-success-line] {
+            background-color: var(--success) !important;
+        }
+
+        .swal2-icon.swal2-success .swal2-success-ring {
+            border-color: var(--success) !important;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .swal2-popup {
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 30px var(--shadow-light-color);
+        }
+
+        /* Add new styles for fullscreen upload status */
+        .fullscreen-upload {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg-primary);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .upload-content {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 20px;
+            background: var(--bg-secondary);
+            box-shadow: 0 0 50px var(--shadow-light-color);
+            border: 1px solid var(--border-color);
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .upload-progress-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent-primary) 0%, var(--bg-tertiary) 0%);
+            position: relative;
+            margin: 2rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(138, 74, 243, 0.3);
+            transition: background 0.3s ease-out;
+        }
+
+        .upload-progress-circle::after {
+            content: "";
+            position: absolute;
+            inset: 10px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+        }
+
+        .upload-progress-text {
+            position: relative;
+            z-index: 1;
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulse 2s infinite;
+            transition: all 0.3s ease-out;
+        }
+
+        .upload-status-text {
+            margin-top: 1.5rem;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin: 1rem;
+            color: var(--accent-primary);
+            animation: bounce 2s infinite;
+        }
+
+        .upload-complete {
+            animation: successPop 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes glowingBorder {
+            0% { box-shadow: 0 0 20px var(--accent-primary); }
+            50% { box-shadow: 0 0 40px var(--accent-primary); }
+            100% { box-shadow: 0 0 20px var(--accent-primary); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header id="header" style="display: none;">
+        <div class="header-content">
+            <div class="user-info">
+                <div class="user-icon"><i class="fas fa-user-astronaut"></i></div>
+                <div class="user-details">
+                    <span id="currentUserDisplay">Username</span>
+                    <span class="credit-badge">
+                        <i class="fas fa-coins"></i>
+                        <span id="userCredits">0</span> เครดิต
+                    </span>
+                </div>
+            </div>
+            <div class="header-actions">
+                 <button onclick="window.location.href='redeem.html'" class="exchange-btn">
+                     <i class="fas fa-ticket-alt"></i> แลกโค้ด
+                 </button>
+                 <button onclick="window.location.href='exchange.html'" class="exchange-btn">
+                     <i class="fas fa-wallet"></i> เติมเงิน
+                 </button>
+                 <button onclick="logout()" class="btn btn-danger">
+                     <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+                 </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Upload Section -->
+    <section class="card upload-section" id="upload-section" style="display: none;">
+        <h2><i class="fas fa-upload"></i> อัปโหลดบอทใหม่</h2>
+        <form id="uploadForm">
+            <div class="input-group">
+                <label for="botFile">เลือกไฟล์บอท (.zip, .7z, .js)</label>
+                <input type="file" id="botFile" name="botFile" accept=".zip,.7z,.js" required>
+            </div>
+            <div class="input-group">
+                <label for="installCommand">คำสั่งติดตั้ง (ถ้ามี)</label>
+                <input type="text" id="installCommand" name="installCommand" placeholder="เช่น npm install discord.js axios">
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-cloud-upload-alt"></i> อัปโหลดและสร้างบอท</button>
+            <div id="uploadStatus" class="upload-status"></div>
+        </form>
+    </section>
+
+    <!-- Bots List Section -->
+    <section id="bots" style="display: none;">
+        <h2><i class="fas fa-robot"></i> รายการบอทของคุณ</h2>
+        <div id="bot-list">
+            <!-- Bot containers will be dynamically added here -->
+        </div>
+    </section>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> แก้ไขไฟล์บอท: <span id="editingBotName" class="bot-name"></span></h3>
+                <button onclick="closeModal()" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="editor-container">
+                    <div class="file-tree-container">
+                        <div class="file-tree" id="modalFileTree">
+                            <!-- File tree will be rendered here -->
+                        </div>
+                    </div>
+                    <textarea id="codeEditor" spellcheck="false"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()"><i class="fas fa-times"></i> ยกเลิก</button>
+                <button class="btn btn-primary" onclick="saveCode()"><i class="fas fa-save"></i> บันทึกการเปลี่ยนแปลง</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const botListContainer = document.getElementById('bot-list');
+        const editModal = document.getElementById('editModal');
+        const codeEditor = document.getElementById('codeEditor');
+        const editingBotName = document.getElementById('editingBotName');
+        const modalFileTree = document.getElementById('modalFileTree');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const userCreditsDisplay = document.getElementById('userCredits');
+        const currentUserDisplay = document.getElementById('currentUserDisplay');
+        const uploadForm = document.getElementById('uploadForm');
+
+        // --- State ---
+        let currentBotId = null;
+        let currentFilePath = null;
+        let currentUsername = null;
+        let botDataCache = {}; // Cache bot status to reduce redundant updates
+        let activeBots = {}; // Keep track of displayed bots
+        let codeMirrorEditor; // Added CodeMirror instance variable
+
+        // --- Initialization ---
+        window.onload = function() {
+            const username = localStorage.getItem('username');
+            if (!username) {
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUsername = username;
+            currentUserDisplay.textContent = username;
+
+            // Show sections
+            document.getElementById('header').style.display = 'block'; // Changed from flex to block
+            document.getElementById('upload-section').style.display = 'block';
+            document.getElementById('bots').style.display = 'block';
+
+            fetchBotList();
+            fetchUserCredits();
+
+            // Set up periodic updates
+            setInterval(updateBots, 5000); // Update bot statuses
+            setInterval(fetchUserCredits, 10000); // Update credits less frequently
+
+            // Initialize CodeMirror for the code editor replacing the textarea
+            codeMirrorEditor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+                lineNumbers: true,
+                mode: "javascript", // You may change/get mode based on file extension later if needed
+                theme: "default"
+            });
+        }
+
+        // --- Authentication ---
+        function logout() {
+            localStorage.removeItem('username');
+            botDataCache = {};
+            activeBots = {};
+            window.location.href = 'login.html';
+        }
+
+        // --- API Interaction ---
+        /**
+         * Centralized function for making authenticated API requests.
+         * Automatically adds username to query params (GET) or body (POST/PUT/DELETE).
+         * Handles basic error reporting using SweetAlert2.
+         * @param {string} url The API endpoint URL.
+         * @param {object} options Fetch options (method, headers, body).
+         * @returns {Promise<object|null>} The JSON response object or null on error.
+         */
+        async function fetchWithAuth(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Add authorization headers if needed in the future
+                    // 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+            };
+            // Ensure options.method is uppercase for reliable comparison
+            const method = options.method?.toUpperCase();
+            const mergedOptions = { ...defaultOptions, ...options, method }; // Ensure method is uppercase here
+
+            // Determine if a body *should* be sent based on method
+            const needsBody = ['POST', 'PUT', 'DELETE'].includes(method);
+
+            if (needsBody) {
+                // Ensure body is an object and contains the username
+                let bodyData = {};
+                if (mergedOptions.body) {
+                    // If body is provided, try to use it (expecting object or JSON string)
+                    if (typeof mergedOptions.body === 'object') {
+                        bodyData = { ...mergedOptions.body }; // Clone existing body object
+                    } else if (typeof mergedOptions.body === 'string') {
+                         console.warn('fetchWithAuth received a string body for POST/PUT/DELETE. Attempting to parse JSON.');
+                         try {
+                             bodyData = JSON.parse(mergedOptions.body);
+                         } catch (e) {
+                             console.error('Failed to parse provided body string:', mergedOptions.body, e);
+                             // Handle parse error: maybe default to empty or throw? Let's default for now.
+                             bodyData = {};
+                         }
+                    } else {
+                         console.warn('Unsupported body type provided:', typeof mergedOptions.body);
+                         bodyData = {};
+                    }
+                }
+
+                // *** FIX: Add username if not present in the bodyData object ***
+                if (!bodyData.username && currentUsername) {
+                    bodyData.username = currentUsername;
+                }
+
+                // Stringify the final body object for the fetch request
+                mergedOptions.body = JSON.stringify(bodyData);
+
+            } else if (method === 'GET' || !method) { // Handle GET or undefined method
+                 // Add username as query parameter for GET requests
+                 const urlObj = new URL(url, window.location.origin);
+                 if (!urlObj.searchParams.has('username') && currentUsername) {
+                     urlObj.searchParams.set('username', currentUsername);
+                 }
+                 url = urlObj.toString();
+                 // Remove body for GET requests if accidentally included in options
+                 delete mergedOptions.body;
+            }
+
+            // --- Make the actual fetch call ---
+            try {
+                const response = await fetch(url, mergedOptions);
+
+                // --- Handle Response ---
+                if (!response.ok) {
+                    // Attempt to parse error json, fallback to status text
+                    const errorData = await response.json().catch(() => ({ error: response.statusText || `HTTP error ${response.status}` }));
+                    console.error(`API Error (${response.status}) for ${method || 'GET'} ${url}:`, errorData);
+
+                    // Specific Error Handling
+                    if (errorData.error === 'เครดิตไม่เพียงพอ') {
+                        showCreditError(errorData);
+                    } else if (response.status === 403) { // 403 Forbidden (Permission Denied)
+                         Swal.fire({
+                             icon: 'error',
+                             title: 'ไม่มีสิทธิ์',
+                             text: errorData.error || 'คุณไม่มีสิทธิ์ดำเนินการนี้สำหรับบอทที่เลือก',
+                             background: 'var(--bg-secondary)',
+                             color: 'var(--text-primary)',
+                             confirmButtonColor: 'var(--accent-primary)',
+                         });
+                    } else { // Generic Error
+                         Swal.fire({
+                             icon: 'error',
+                             title: 'เกิดข้อผิดพลาด',
+                             text: errorData.error || `ไม่สามารถดำเนินการได้ (รหัส: ${response.status})`,
+                             background: 'var(--bg-secondary)',
+                             color: 'var(--text-primary)',
+                             confirmButtonColor: 'var(--accent-primary)',
+                         });
+                    }
+                    return null; // Indicate failure
+                }
+
+                // Handle successful responses
+                // Check for empty body (e.g., 204 No Content)
+                const contentType = response.headers.get('content-type');
+                if (response.status === 204 || !contentType || !contentType.includes('application/json')) {
+                    return { success: true, status: response.status }; // Indicate success, maybe with no data
+                }
+
+                // Parse JSON for successful responses with content
+                return await response.json();
+
+            } catch (err) {
+                // Handle network errors or other fetch exceptions
+                console.error('Network or Fetch Error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'การเชื่อมต่อล้มเหลว',
+                    text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณ',
+                    background: 'var(--bg-secondary)',
+                    color: 'var(--text-primary)',
+                    confirmButtonColor: 'var(--accent-primary)',
+                });
+                return null; // Indicate failure
+            }
+        }
+
+
+        // --- Bot Management ---
+        async function fetchBotList() {
+            if (!currentUsername) return;
+            // Use fetchWithAuth which adds username to query param for GET
+            const botIds = await fetchWithAuth(`/bots/${currentUsername}`, { method: 'GET' });
+            if (botIds && Array.isArray(botIds)) {
+                 activeBots = botIds.reduce((acc, botId) => ({ ...acc, [botId]: true }), {});
+                 await updateBots(true); // Force update after getting the list
+            } else {
+                // Handle case where fetching list fails or returns unexpected data
+                console.error("Failed to fetch or parse bot list.");
+                activeBots = {}; // Reset active bots
+                updateBots(true); // Update UI to show "no bots" message
+            }
+        }
+
+        async function updateBots(forceUpdate = false) {
+            if (!currentUsername) return;
+
+            const currentBotIdsInUI = Object.keys(activeBots);
+            const botIdsOnServer = await fetchWithAuth(`/bots/${currentUsername}`, { method: 'GET' });
+
+            // Basic check if server fetch failed
+            if (!botIdsOnServer || !Array.isArray(botIdsOnServer)) {
+                 console.warn("Could not verify bot list from server during update.");
+                  // Option 1: Keep current UI state (might be stale)
+                 // Option 2: Clear UI if server is unreachable (more drastic)
+                 // Let's stick with Option 1 for now unless errors persist.
+                 return;
+            }
+
+             // Update activeBots based on the latest list from the server
+             const serverBotsSet = new Set(botIdsOnServer);
+             activeBots = botIdsOnServer.reduce((acc, botId) => ({ ...acc, [botId]: true }), {});
+
+
+            // --- UI Update Logic ---
+            const existingBotElements = new Set([...botListContainer.children]
+                .map(child => child.dataset.botId)
+                .filter(id => id)); // Ensure we only get valid bot IDs
+
+            // Remove bots from UI that are no longer on the server list
+            existingBotElements.forEach(botId => {
+                if (!serverBotsSet.has(botId)) {
+                    const botDiv = botListContainer.querySelector(`[data-bot-id="${botId}"]`);
+                    if (botDiv) {
+                        console.log(`Removing stale bot ${botId} from UI.`);
+                        botDiv.remove();
+                        delete botDataCache[botId]; // Clear cache for removed bot
+                    }
+                }
+            });
+
+            // Update or add bots present on the server list
+            if (botIdsOnServer.length === 0) {
+                botListContainer.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">ยังไม่มีบอท... ลองอัปโหลดบอทแรกของคุณดูสิ!</p>';
+                botDataCache = {}; // Clear cache if no bots
+                return;
+            }
+
+
+            let hasVisibleBots = false; // Track if any bots are actually displayed
+            for (const botId of botIdsOnServer) {
+                // Fetch status (GET request, username added by fetchWithAuth)
+                const statusData = await fetchWithAuth(`/status/${botId}`, { method: 'GET' });
+
+                if (!statusData) {
+                    console.warn(`Failed to get status for bot ${botId}`);
+                    // Option: Display an error state for this specific bot?
+                    continue; // Skip this bot if status fetch failed
+                }
+
+                const statusJson = JSON.stringify(statusData); // For cache comparison
+
+                 // Only update DOM if data changed or forced
+                if (!forceUpdate && botDataCache[botId] === statusJson) {
+                     hasVisibleBots = true; // Count it even if not updated
+                     continue;
+                 }
+
+                botDataCache[botId] = statusJson; // Update cache
+
+                let botDiv = botListContainer.querySelector(`[data-bot-id="${botId}"]`);
+
+                if (!botDiv) {
+                    // If the "no bots" message exists, remove it first
+                    const noBotsMsg = botListContainer.querySelector('p');
+                    if (noBotsMsg && noBotsMsg.textContent.includes('ยังไม่มีบอท')) {
+                        noBotsMsg.remove();
+                    }
+                    botDiv = createBotElement(botId);
+                    botListContainer.appendChild(botDiv);
+                }
+
+                updateBotElement(botDiv, botId, statusData);
+                hasVisibleBots = true;
+            }
+
+             // Double-check if, after loops and potential errors, no bots are visible
+             if (!hasVisibleBots && botListContainer.children.length === 0) {
+                 botListContainer.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">ยังไม่มีบอท... ลองอัปโหลดบอทแรกของคุณดูสิ!</p>';
+             }
+        }
+
+
+        function createBotElement(botId) {
+            const div = document.createElement('div');
+            div.className = 'card bot-container'; // Use card style
+            div.dataset.botId = botId;
+            // Added data-bot-id attribute to the main container
+            div.innerHTML = `
+                <div class="bot-header">
+                    <h3 class="bot-title">${botId}</h3>
+                    <span class="bot-status" id="status-${botId}">กำลังโหลด...</span>
+                </div>
+
+                <div class="bot-details">
+                    <p><strong>คำสั่งติดตั้ง:</strong> <span id="install-${botId}">N/A</span></p>
+                </div>
+
+                <div class="terminal-container">
+                    <div class="terminal" id="terminal-${botId}">
+                        <div id="logs-${botId}"></div>
+                    </div>
+                     <div class="terminal-input-container">
+                         <input type="text" id="command-input-${botId}" placeholder="> ป้อนคำสั่งสำหรับบอท..." onkeydown="handleCommand(event, '${botId}')">
+                     </div>
+                </div>
+
+                <div class="bot-actions">
+                     <button class="btn btn-success" onclick="startBot('${botId}')"><i class="fas fa-play"></i> รัน</button>
+                     <button class="btn btn-warning" onclick="stopBot('${botId}')"><i class="fas fa-stop"></i> หยุด</button>
+                     <button class="btn btn-danger" onclick="deleteBot('${botId}')"><i class="fas fa-trash"></i> ลบ</button>
+                     <button class="btn btn-info" onclick="editBot('${botId}')"><i class="fas fa-edit"></i> แก้ไข</button>
+                     <div class="install-group">
+                        <input type="text" id="install-input-${botId}" placeholder="ชื่อโมดูล (เช่น discord.js)">
+                        <button class="btn btn-primary" onclick="installModule('${botId}')"><i class="fas fa-download"></i> ติดตั้ง</button>
+                     </div>
+                     <button class="btn btn-secondary btn-icon" onclick="toggleFullscreen('terminal-${botId}', this)"><i class="fas fa-expand"></i></button>
+                </div>
+            `;
+            return div;
+        }
+
+        function updateBotElement(botDiv, botId, status) {
+            const safeBotId = CSS.escape(botId);
+            const statusElement = botDiv.querySelector(`#status-${safeBotId}`);
+            const installElement = botDiv.querySelector(`#install-${safeBotId}`);
+            const logsElement = botDiv.querySelector(`#logs-${safeBotId}`);
+            const terminalElement = botDiv.querySelector(`#terminal-${safeBotId}`);
+
+            if (!statusElement || !installElement || !logsElement || !terminalElement) {
+                console.error(`Could not find elements for bot ${botId} during update.`);
+                return; // Prevent errors if elements are missing
+            }
+
+            const isRunning = status.status === 'กำลังทำงาน';
+            statusElement.textContent = isRunning ? 'กำลังทำงาน' : 'หยุดทำงาน';
+            statusElement.className = `bot-status ${isRunning ? 'status-running' : 'status-stopped'}`;
+            installElement.textContent = status.installCommand || 'ไม่ได้ระบุ';
+
+            // Format and render logs
+            logsElement.innerHTML = (status.logs || []).map(log => {
+                let logClass = '';
+                let formattedLog = typeof log === 'string' ? log : JSON.stringify(log); // Ensure log is a string
+
+                // Basic keyword detection for styling (adjust keywords as needed)
+                if (formattedLog.includes('[ERROR]') || formattedLog.includes('❌') || formattedLog.toLowerCase().includes('error')) {
+                    logClass = 'log-error';
+                } else if (formattedLog.includes('✅') || formattedLog.includes('[ผลลัพธ์') || formattedLog.includes('สำเร็จ')) {
+                    logClass = 'log-result';
+                } else if (formattedLog.includes('ℹ️') || formattedLog.includes('[ข้อมูล]') || formattedLog.includes('กำลังเริ่ม')) {
+                    logClass = 'log-info';
+                } else if (formattedLog.startsWith('> ')) {
+                    logClass = 'log-command'; // Command echo
+                }
+
+                // Basic HTML escaping (replace with a robust library if complex HTML is possible in logs)
+                formattedLog = formattedLog.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">");
+
+                return `<div class="${logClass}">${formattedLog}</div>`;
+            }).join('');
+
+            // Auto-scroll terminal to bottom
+            setTimeout(() => {
+                terminalElement.scrollTop = terminalElement.scrollHeight;
+            }, 0);
+        }
+
+        // --- Bot Actions ---
+        async function startBot(botId) {
+             console.log(`Attempting to start bot: ${botId} for user: ${currentUsername}`);
+            // fetchWithAuth will automatically add username to the body for POST
+            const result = await fetchWithAuth(`/start/${botId}`, { method: 'POST' });
+            if(result && result.success) {
+                 console.log(`Start command successful for ${botId}`);
+                 await updateBots(true); // Force update on success
+            } else {
+                 console.error(`Start command failed for ${botId}`, result);
+                 // Error message is shown by fetchWithAuth
+            }
+        }
+
+        async function stopBot(botId) {
+             console.log(`Attempting to stop bot: ${botId} for user: ${currentUsername}`);
+             // fetchWithAuth will automatically add username to the body for POST
+            const result = await fetchWithAuth(`/stop/${botId}`, { method: 'POST' });
+             if(result && result.success) {
+                console.log(`Stop command successful for ${botId}`);
+                await updateBots(true);
+             } else {
+                 console.error(`Stop command failed for ${botId}`, result);
+                 // Error message is shown by fetchWithAuth
+            }
+        }
+
+        async function deleteBot(botId) {
+             Swal.fire({
+                 title: 'ยืนยันการลบ',
+                 text: `คุณแน่ใจหรือไม่ว่าต้องการลบบอท "${botId}"? การกระทำนี้ไม่สามารถย้อนกลับได้!`,
+                 icon: 'warning',
+                 showCancelButton: true,
+                 confirmButtonColor: 'var(--danger)',
+                 cancelButtonColor: 'var(--secondary)',
+                 confirmButtonText: '<i class="fas fa-trash"></i> ใช่, ลบเลย!',
+                 cancelButtonText: '<i class="fas fa-times"></i> ยกเลิก',
+                 background: 'var(--bg-secondary)',
+                 color: 'var(--text-primary)',
+             }).then(async (result) => {
+                 if (result.isConfirmed) {
+                      console.log(`Attempting to delete bot: ${botId} for user: ${currentUsername}`);
+                     // fetchWithAuth will automatically add username to the body for DELETE
+                     const deleteResult = await fetchWithAuth(`/delete/${botId}`, { method: 'DELETE' });
+                     if (deleteResult && deleteResult.success) {
+                        console.log(`Delete command successful for ${botId}`);
+                         delete activeBots[botId]; // Remove from active list state
+                         delete botDataCache[botId]; // Clear cache
+                         const botDiv = botListContainer.querySelector(`[data-bot-id="${botId}"]`);
+                         if (botDiv) {
+                            // Fade out animation
+                            botDiv.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                            botDiv.style.opacity = '0';
+                            botDiv.style.transform = 'scale(0.9)';
+                            setTimeout(() => {
+                                botDiv.remove();
+                                // Check if list is empty after removal
+                                if (botListContainer.children.length === 0) {
+                                    updateBots(); // Will display "no bots" message if needed
+                                }
+                            }, 500); // Wait for animation
+                         }
+                         Swal.fire({
+                             title: 'ลบสำเร็จ!',
+                             text: `บอท "${botId}" ถูกลบแล้ว`,
+                             icon: 'success',
+                             background: 'var(--bg-secondary)',
+                             color: 'var(--text-primary)',
+                             confirmButtonColor: 'var(--accent-primary)',
+                             timer: 1500,
+                             showConfirmButton: false
+                         });
+                     } else {
+                          console.error(`Delete command failed for ${botId}`, deleteResult);
+                         // Error message is shown by fetchWithAuth
+                     }
+                 }
+             });
+        }
+
+        async function installModule(botId) {
+            const installInput = document.getElementById(`install-input-${botId}`);
+            const installCommand = installInput.value.trim();
+            if (!installCommand) {
+                 Swal.fire({
+                     icon: 'warning',
+                     title: 'ข้อมูลไม่ครบถ้วน',
+                     text: 'กรุณาระบุชื่อโมดูลหรือคำสั่งติดตั้ง (เช่น discord.js หรือ npm install)',
+                     background: 'var(--bg-secondary)',
+                     color: 'var(--text-primary)',
+                     confirmButtonColor: 'var(--accent-primary)',
+                 });
+                return;
+            }
+             console.log(`Attempting to install module: "${installCommand}" for bot: ${botId} by user: ${currentUsername}`);
+            // fetchWithAuth will add username to the body automatically
+            const result = await fetchWithAuth(`/install/${botId}`, {
+                method: 'POST',
+                body: { installCommand } // Pass installCommand, username is added by fetchWithAuth
+            });
+
+            if (result && result.success) {
+                console.log(`Install command successful for ${botId}`);
+                installInput.value = ''; // Clear input on success
+                await updateBots(true); // Refresh logs
+                Swal.fire({
+                     icon: 'info',
+                     title: 'กำลังติดตั้ง',
+                     text: `ส่งคำสั่งติดตั้ง "${installCommand}" สำหรับบอท ${botId} แล้ว โปรดตรวจสอบสถานะในหน้าต่าง Terminal`,
+                     background: 'var(--bg-secondary)',
+                     color: 'var(--text-primary)',
+                     confirmButtonColor: 'var(--accent-primary)',
+                     timer: 2500,
+                     showConfirmButton: false
+                 });
+            } else {
+                 console.error(`Install command failed for ${botId}`, result);
+                 // Error message (like insufficient credits) is shown by fetchWithAuth
+            }
+        }
+
+        async function handleCommand(event, botId) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const input = event.target;
+                const command = input.value.trim();
+                if (command) {
+                    // Optionally add command to logs immediately for better UX
+                    const logsElement = document.getElementById(`logs-${botId}`);
+                    const terminalElement = logsElement?.parentElement; // Get the terminal scroll container
+                    if(logsElement && terminalElement) {
+                        const commandLog = document.createElement('div');
+                        commandLog.className = 'log-command';
+                        // Basic escaping for the displayed command
+                        commandLog.textContent = command.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">");
+                        logsElement.appendChild(commandLog);
+                        // Scroll down after adding the command log
+                        terminalElement.scrollTop = terminalElement.scrollHeight;
+                    }
+
+                    console.log(`Sending command: "${command}" to bot: ${botId} by user: ${currentUsername}`);
+                    // fetchWithAuth will add username automatically
+                    const result = await fetchWithAuth(`/command/${botId}`, {
+                        method: 'POST',
+                        body: { command } // Send command, username added by fetchWithAuth
+                    });
+
+                    input.value = ''; // Clear input regardless of success/fail
+
+                    if (result && result.success) {
+                        console.log(`Command "${command}" sent successfully to ${botId}`);
+                        await updateBots(true); // Force update to show command output
+                    } else {
+                         console.error(`Command "${command}" failed for ${botId}`, result);
+                        // Error shown by fetchWithAuth
+                    }
+                }
+            }
+        }
+
+        // --- Upload ---
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = e.target.botFile;
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showUploadStatus('กรุณาเลือกไฟล์ก่อนอัปโหลด', true);
+                return;
+            }
+
+            const formData = new FormData(e.target);
+            formData.append('username', currentUsername);
+
+            // Create and configure XMLHttpRequest for upload with progress
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+
+            // Setup progress handler
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    showUploadStatus(`${percentComplete}%`);
+                }
+            };
+
+            // Setup completion handler
+            xhr.onload = async function() {
+                if (xhr.status === 200) {
+                    try {
+                        const result = JSON.parse(xhr.responseText);
+                        if (result.botId) {
+                            console.log(`Upload successful for new bot: ${result.botId}`);
+                            activeBots[result.botId] = true;
+                            showUploadStatus(`อัปโหลด "${result.botId}" สำเร็จ!`, false);
+                            await updateBots(true);
+                            e.target.reset();
+                        }
+                    } catch (err) {
+                        console.error('Error parsing response:', err);
+                        showUploadStatus('เกิดข้อผิดพลาดในการประมวลผลการตอบกลับ', true);
+                    }
+                } else {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.error === 'เครดิตไม่เพียงพอ') {
+                            showCreditError(response);
+                            showUploadStatus('อัปโหลดล้มเหลว: เครดิตไม่เพียงพอ', true);
+                        } else {
+                            showUploadStatus(`อัปโหลดล้มเหลว: ${response.error || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ'}`, true);
+                        }
+                    } catch (err) {
+                        showUploadStatus('เกิดข้อผิดพลาดในการอัปโหลด', true);
+                    }
+                }
+            };
+
+            // Setup error handler
+            xhr.onerror = () => {
+                showUploadStatus('เกิดข้อผิดพลาดในการเชื่อมต่อ', true);
+            };
+
+            // Start upload
+            xhr.send(formData);
+        });
+
+        function showUploadStatus(message, isError = false) {
+            if (isError) {
+                uploadStatus.innerHTML = message;
+                uploadStatus.className = 'upload-status status-error';
+                return;
+            }
+
+            // Get or create fullscreen container
+            let fullscreenDiv = document.querySelector('.fullscreen-upload');
+            if (!fullscreenDiv) {
+                fullscreenDiv = document.createElement('div');
+                fullscreenDiv.className = 'fullscreen-upload';
+                document.body.appendChild(fullscreenDiv);
+            }
+
+            if (message.includes('%')) {
+                // During upload - update progress
+                const progress = parseInt(message.match(/\d+/)[0]);
+                
+                // Create or update content
+                if (!fullscreenDiv.querySelector('.upload-content')) {
+                    fullscreenDiv.innerHTML = `
+                        <div class="upload-content">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="upload-progress-circle">
+                                <span class="upload-progress-text">0%</span>
+                            </div>
+                            <div class="upload-status-text">
+                                <i class="fas fa-sync fa-spin"></i> กำลังอัปโหลดไฟล์ของคุณ...
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Update only the necessary parts
+                const progressCircle = fullscreenDiv.querySelector('.upload-progress-circle');
+                const progressText = fullscreenDiv.querySelector('.upload-progress-text');
+                
+                if (progressCircle && progressText) {
+                    progressCircle.style.background = `conic-gradient(var(--accent-primary) ${progress}%, var(--bg-tertiary) ${progress}%)`;
+                    progressText.textContent = `${progress}%`;
+                }
+            } else {
+                // Upload complete - show success message
+                const botIdMatch = message.match(/\"(bp\d+)\"/);
+                const botId = botIdMatch ? botIdMatch[1] : '';
+                
+                fullscreenDiv.innerHTML = `
+                    <div class="upload-content upload-complete" style="animation: glowingBorder 2s infinite">
+                        <div class="upload-icon" style="color: var(--success)">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h2 style="color: var(--success); margin: 1rem 0;">อัปโหลดสำเร็จ! 🚀</h2>
+                        <div class="upload-status-text">
+                            บอท <span style="color: var(--accent-primary); font-weight: bold;">${botId}</span> พร้อมใช้งานแล้ว!
+                        </div>
+                    </div>
+                `;
+
+                // Auto remove after 2 seconds with smooth fade out
+                setTimeout(() => {
+                    fullscreenDiv.style.animation = 'fadeOut 0.3s ease-out forwards';
+                    setTimeout(() => fullscreenDiv.remove(), 300);
+                }, 2000);
+            }
+        }
+
+        // --- Editor Modal ---
+        async function editBot(botId) {
+            currentBotId = botId;
+            editingBotName.textContent = botId;
+
+            // Show modal immediately with loading state
+            modalFileTree.innerHTML = '<li><i class="fas fa-spinner fa-spin"></i> กำลังโหลดโครงสร้างไฟล์...</li>';
+            codeMirrorEditor.setValue('เลือกไฟล์จากด้านซ้ายเพื่อแก้ไข...');
+            codeMirrorEditor.setOption("readOnly", true);
+            editModal.style.display = 'flex';
+
+            // Fetch file structure (GET request)
+            const fileStructure = await fetchWithAuth(`/files/${botId}`, { method: 'GET' });
+
+            if (fileStructure && Array.isArray(fileStructure)) {
+                modalFileTree.innerHTML = ''; // Clear loading state
+                renderFileTree(fileStructure, modalFileTree, botId, ''); // Start with empty base path
+                // Try to auto-load index.js or the first file
+                const firstFilePath = findFirstEditableFile(fileStructure);
+                if (firstFilePath) {
+                    // Automatically select and load the first file
+                     const firstFileElement = modalFileTree.querySelector(`li[data-path="${CSS.escape(firstFilePath)}"]`);
+                     if (firstFileElement) {
+                        firstFileElement.classList.add('selected');
+                        loadFile(botId, firstFilePath); // Load content after highlighting
+                    } else {
+                         loadFile(botId, firstFilePath); // Load even if highlight fails
+                    }
+                } else {
+                    codeMirrorEditor.setValue('ไม่พบไฟล์ที่สามารถแก้ไขได้ หรือ โฟลเดอร์ว่างเปล่า');
+                    codeMirrorEditor.setOption("readOnly", true); // Keep readOnly if no file loaded
+                }
+            } else {
+                 modalFileTree.innerHTML = '<li><i class="fas fa-exclamation-triangle"></i> ไม่สามารถโหลดโครงสร้างไฟล์ได้</li>';
+                 codeMirrorEditor.setValue('เกิดข้อผิดพลาดในการโหลดข้อมูลไฟล์');
+                 codeMirrorEditor.setOption("readOnly", true);
+                 // Error message shown by fetchWithAuth
+            }
+        }
+
+        function findFirstEditableFile(structure, basePath = '') {
+             // Prioritize common entry points
+             const commonFiles = ['index.js', 'main.js', 'bot.js'];
+             for (const commonFile of commonFiles) {
+                 const commonPath = basePath ? `${basePath}/${commonFile}` : commonFile;
+                 if (structure.some(item => item.type === 'file' && item.name === commonFile)) {
+                     return commonPath;
+                 }
+             }
+
+             // Fallback: find the first file (alphabetically, folders first)
+             const sortedStructure = [...structure].sort((a, b) => {
+                 if (a.type === 'folder' && b.type === 'file') return -1;
+                 if (a.type === 'file' && b.type === 'folder') return 1;
+                 return a.name.localeCompare(b.name);
+             });
+
+             for (const item of sortedStructure) {
+                 const currentPath = basePath ? `${basePath}/${item.name}` : item.name;
+                 // Define editable extensions
+                 const editableExtensions = ['.js', '.json', '.txt', '.md', '.env', '.py', '.sh']; // Add more if needed
+                 if (item.type === 'file' && editableExtensions.some(ext => item.name.toLowerCase().endsWith(ext)) ) {
+                     return currentPath;
+                 }
+                 if (item.type === 'folder' && item.children) {
+                     const foundInChildren = findFirstEditableFile(item.children, currentPath);
+                     if (foundInChildren) {
+                         return foundInChildren;
+                     }
+                 }
+             }
+             return null; // No suitable file found
+        }
+
+
+        function renderFileTree(structure, parentElement, botId, basePath) {
+            // Create UL only if structure has items
+            if (!structure || structure.length === 0) {
+                // Optionally display an empty message within the parent if it's the root
+                if (parentElement === modalFileTree) {
+                     parentElement.innerHTML = '<li><i>(โฟลเดอร์ว่างเปล่า)</i></li>';
+                }
+                return;
+            }
+
+            const ul = document.createElement('ul');
+            // Sort folders first, then alphabetically by name
+            structure.sort((a, b) => {
+                if (a.type === 'folder' && b.type === 'file') return -1;
+                if (a.type === 'file' && b.type === 'folder') return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            structure.forEach(item => {
+                const li = document.createElement('li');
+                li.className = item.type; // 'folder' or 'file'
+                // Ensure basePath is handled correctly (no leading/trailing slashes issues)
+                const currentPath = basePath ? `${basePath}/${item.name}` : item.name;
+                li.dataset.path = currentPath; // Store full path for easy retrieval
+
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = item.name;
+                li.appendChild(nameSpan);
+
+                if (item.type === 'file') {
+                    li.onclick = (event) => {
+                        event.stopPropagation(); // Prevent clicks bubbling up to folders
+                        // Update selection styling first
+                        const selected = modalFileTree.querySelector('.selected');
+                        if (selected) selected.classList.remove('selected');
+                        li.classList.add('selected');
+                        // Then load the file
+                        loadFile(botId, currentPath);
+                    };
+                } else if (item.type === 'folder') {
+                     // Optional: Add toggle functionality for folders if they have children
+                     if (item.children && item.children.length > 0) {
+                         li.classList.add('has-children'); // Add class for styling caret maybe
+                         li.onclick = (event) => {
+                             event.stopPropagation();
+                             const subUl = li.querySelector('ul');
+                             if (subUl) {
+                                subUl.style.display = subUl.style.display === 'none' ? 'block' : 'none';
+                                li.classList.toggle('open'); // Toggle class for styling open/closed state
+                             }
+                         };
+                         // Render children recursively
+                         renderFileTree(item.children, li, botId, currentPath);
+                         // Optionally start with sub-folders collapsed
+                         const subUl = li.querySelector('ul');
+                         if(subUl) subUl.style.display = 'none';
+
+                     } else {
+                        // Make empty folders non-clickable or visually distinct
+                        li.style.cursor = 'default';
+                        li.style.opacity = '0.7';
+                     }
+                }
+
+                ul.appendChild(li);
+            });
+            parentElement.appendChild(ul);
+        }
+
+
+        async function loadFile(botId, filePath) {
+             codeMirrorEditor.setValue(`กำลังโหลดเนื้อหาไฟล์: ${filePath}...`);
+             codeMirrorEditor.setOption("readOnly", "nocursor");
+
+             currentFilePath = filePath;
+             const data = await fetchWithAuth(`/file/${botId}/${encodeURIComponent(filePath)}`, { method: 'GET' });
+
+             if (data) {
+                if(data.error){
+                     codeMirrorEditor.setValue(`เกิดข้อผิดพลาด: ${data.error}`);
+                } else {
+                     codeMirrorEditor.setValue(data.content !== undefined ? data.content : '');
+                     codeMirrorEditor.setOption("readOnly", false);
+                     codeMirrorEditor.focus();
+                }
+             } else {
+                 codeMirrorEditor.setValue('ไม่สามารถโหลดเนื้อหาไฟล์ได้');
+                 codeMirrorEditor.setOption("readOnly", true);
+             }
+         }
+
+        async function saveCode() {
+            if (!currentBotId || !currentFilePath) {
+                Swal.fire({ icon: 'warning', title: 'ไม่ได้เลือกไฟล์', text: 'กรุณาเลือกไฟล์ที่ต้องการบันทึกก่อน', background: 'var(--bg-secondary)', color: 'var(--text-primary)', confirmButtonColor: 'var(--accent-primary)' });
+                return;
+            }
+            const content = codeMirrorEditor.getValue();
+
+            Swal.fire({
+                title: 'กำลังบันทึก...',
+                text: `กำลังบันทึกการเปลี่ยนแปลงไปยัง ${currentFilePath}`,
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(Swal.getConfirmButton()) },
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)'
+            });
+
+            const result = await fetchWithAuth(`/file/${currentBotId}/${encodeURIComponent(currentFilePath)}`, {
+                method: 'PUT',
+                body: { content }
+            });
+
+            Swal.close();
+            if (result && result.success) {
+                 Swal.fire({
+                     icon: 'success',
+                     title: 'บันทึกสำเร็จ',
+                     text: `ไฟล์ ${currentFilePath} ถูกบันทึกแล้ว`,
+                     background: 'var(--bg-secondary)',
+                     color: 'var(--text-primary)',
+                     confirmButtonColor: 'var(--accent-primary)',
+                     timer: 1500,
+                     showConfirmButton: false
+                 });
+                closeModal();
+            } else {
+                 console.error(`Save failed for ${currentFilePath}`, result);
+            }
+        }
+
+        function closeModal() {
+            editModal.style.display = 'none';
+            currentBotId = null;
+            currentFilePath = null;
+            codeMirrorEditor.setValue('');
+            codeMirrorEditor.setOption("readOnly", true); // Ensure it's readOnly when closed
+            modalFileTree.innerHTML = ''; // Clear tree
+        }
+
+        // --- Fullscreen Toggle ---
+        function toggleFullscreen(elementId, button) {
+            const terminalElement = document.getElementById(elementId);
+            if (!terminalElement) {
+                console.error("Terminal element not found:", elementId);
+                return;
+            }
+
+            const botContainer = terminalElement.closest('.bot-container'); // Find the bot card
+            if (!botContainer) {
+                 console.error("Bot container not found for terminal:", elementId);
+                 return;
+            }
+            const container = terminalElement.closest('.terminal-container');
+            const inputContainer = botContainer.querySelector('.terminal-input-container'); // Find within bot card
+
+             if (!container || !inputContainer) {
+                 console.error("Terminal structure incomplete for:", elementId);
+                 return;
+            }
+
+            const isCurrentlyFullscreen = botContainer.classList.contains('fullscreen-mode');
+
+            if (isCurrentlyFullscreen) {
+                // --- Exit Fullscreen ---
+                botContainer.classList.remove('fullscreen-mode');
+                terminalElement.classList.remove('fullscreen');
+                container.classList.remove('fullscreen-container');
+                inputContainer.classList.remove('fullscreen-input-container');
+
+                // Remove minimize button
+                const minimizeBtn = document.querySelector('.minimize-btn-container');
+                if (minimizeBtn) minimizeBtn.remove();
+
+                // Change icon back to expand in the original button
+                button.innerHTML = '<i class="fas fa-expand"></i>';
+
+                // Re-enable scrolling on body
+                 document.body.style.overflow = '';
+
+                 console.log(`Exited fullscreen for ${elementId}`);
+
+            } else {
+                // --- Enter Fullscreen ---
+                 document.body.style.overflow = 'hidden'; // Prevent body scroll
+
+                botContainer.classList.add('fullscreen-mode'); // Add class to bot card
+                terminalElement.classList.add('fullscreen');
+                container.classList.add('fullscreen-container');
+                inputContainer.classList.add('fullscreen-input-container');
+
+                // Change icon to compress in the original button
+                button.innerHTML = '<i class="fas fa-compress"></i>';
+
+                // Add minimize button to the body
+                const minimizeBtnContainer = document.createElement('div');
+                minimizeBtnContainer.className = 'minimize-btn-container';
+                // Ensure the onclick finds the correct *original* button again
+                minimizeBtnContainer.innerHTML = `<button class="btn btn-secondary btn-icon" onclick="toggleFullscreen('${elementId}', document.querySelector('[data-bot-id=\\'${botContainer.dataset.botId}\\'] .bot-actions button .fa-compress').closest('button'))"><i class="fas fa-compress"></i></button>`;
+                document.body.appendChild(minimizeBtnContainer);
+
+                // Scroll to bottom and focus input
+                terminalElement.scrollTop = terminalElement.scrollHeight;
+                inputContainer.querySelector('input').focus();
+
+                console.log(`Entered fullscreen for ${elementId}`);
+            }
+        }
+
+        // --- Credit Management ---
+        async function fetchUserCredits() {
+            if (!currentUsername) return;
+            // Use GET, username added by fetchWithAuth
+            const data = await fetchWithAuth(`/credits/${currentUsername}`, { method: 'GET' });
+            if (data && data.credits !== undefined) {
+                // Check if value changed before updating DOM
+                if (userCreditsDisplay.textContent !== String(data.credits)) {
+                     userCreditsDisplay.textContent = data.credits;
+                }
+            } else {
+                // Handle fetch error or missing credits data
+                if (userCreditsDisplay.textContent !== "N/A") {
+                    userCreditsDisplay.textContent = "N/A"; // Indicate error or unavailable
+                }
+            }
+        }
+
+        function showCreditError(errorData) {
+            // Check if data needed for the message exists
+            const currentCredits = errorData.currentCredits !== undefined ? errorData.currentCredits : 'N/A';
+            const requiredCredits = errorData.requiredCredits !== undefined ? errorData.requiredCredits : 'N/A';
+            const needed = (typeof currentCredits === 'number' && typeof requiredCredits === 'number')
+                           ? requiredCredits - currentCredits
+                           : 'N/A';
+
+            Swal.fire({
+                title: '⚠️ เครดิตไม่เพียงพอ',
+                html: `
+                    <div style="text-align: center; padding: 10px 0;">
+                        <div style="font-size: 3em; margin: 15px 0; color: var(--warning);">🪙</div>
+                        <p style="margin: 10px 0; color: var(--text-secondary);">คุณมีเครดิตไม่เพียงพอสำหรับดำเนินการนี้</p>
+                        <div style="margin: 15px; font-size: 1.1em;">
+                            <span style="color: var(--danger);">เครดิตปัจจุบัน: ${currentCredits}</span>
+                            <br>
+                            <span style="color: var(--info);">เครดิตที่ต้องการ: ${requiredCredits}</span>
+                        </div>
+                        ${needed !== 'N/A' ? `<p style="color: var(--text-secondary); font-size: 0.9em;">ต้องการเพิ่มอีก ${needed} เครดิต</p>` : ''}
+                        <button onclick="window.location.href='exchange.html'; Swal.close();" class="swal2-confirm swal2-styled" style="background: var(--gradient-primary); margin-top: 15px; border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                           <i class="fas fa-sync-alt"></i> ไปที่หน้าแลกโค้ด
+                        </button>
+                    </div>
+                `,
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                showConfirmButton: false, // Hide default confirm
+                showCancelButton: true,
+                cancelButtonText: 'ปิด',
+                cancelButtonColor: 'var(--bg-tertiary)', // Use a less prominent color for cancel
+                focusCancel: true, // Focus cancel button by default
+                showClass: { popup: 'animate__animated animate__fadeInDown animate__faster' },
+                hideClass: { popup: 'animate__animated animate__fadeOutUp animate__faster' }
+            });
+        }
+
+    </script>
+
+</body>
+</html>

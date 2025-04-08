@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>หน้าจัดการระบบ</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --secondary: #666699;
+            --danger: #ff3366;
+            --success: #00cc99;
+            --warning: #ffcc00;
+            --dark: #1c1c2b;
+            --darker: #11111a;
+            --light: #d9e1e8;
+            --info: #17a2b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            background: var(--darker);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--dark);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary);
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .menu-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            color: var(--light);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item:hover {
+            background: rgba(0,212,255,0.1);
+            color: var(--primary);
+        }
+
+        .menu-item.active {
+            background: var(--primary);
+            color: var(--darker);
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--dark);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            background: var(--darker);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: var(--light);
+            width: 300px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,212,255,0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--dark);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.2);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .data-table {
+            width: 100%;
+            background: var(--dark);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .data-table th {
+            background: rgba(0,0,0,0.2);
+            color: var(--primary);
+            font-weight: 600;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .data-table tr:hover {
+            background: rgba(0,212,255,0.05);
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn i {
+            font-size: 0.9em;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--darker);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: var(--darker);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 1000;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: var(--primary);
+                color: var(--darker);
+                padding: 10px;
+                border-radius: 8px;
+                cursor: pointer;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--light);
+        }
+
+        .swal2-input {
+            background: var(--dark) !important;
+            color: var(--light) !important;
+            border: 1px solid var(--primary) !important;
+            margin: 5px 0 !important;
+        }
+
+        .swal2-input:focus {
+            box-shadow: 0 0 0 2px rgba(0,212,255,0.2) !important;
+        }
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .chart-container {
+            background: var(--dark);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .settings-card {
+            background: var(--dark);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .settings-card h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .settings-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .settings-value {
+            background: var(--darker);
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: var(--light);
+            min-width: 80px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-robot"></i> ระบบจัดการ</h2>
+            <p>ยินดีต้อนรับสู่ระบบจัดการ</p>
+        </div>
+
+        <a href="#dashboard" class="menu-item active" onclick="switchTab('dashboard')">
+            <i class="fas fa-home"></i> แดชบอร์ด
+        </a>
+        <a href="#users" class="menu-item" onclick="switchTab('users')">
+            <i class="fas fa-users"></i> จัดการผู้ใช้
+        </a>
+        <a href="#bots" class="menu-item" onclick="switchTab('bots')">
+            <i class="fas fa-robot"></i> จัดการบอท
+        </a>
+        <a href="#credits" class="menu-item" onclick="switchTab('credits')">
+            <i class="fas fa-coins"></i> จัดการเครดิต
+        </a>
+        <a href="#settings" class="menu-item" onclick="switchTab('settings')">
+            <i class="fas fa-cog"></i> ตั้งค่าระบบ
+        </a>
+    </div>
+
+    <div class="main-content">
+        <div id="dashboard" class="tab-content active">
+            <div class="content-header">
+                <h1>แดชบอร์ด</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> รีเฟรช
+                    </button>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-container">
+                    <canvas id="userStatsChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="botStatsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-users fa-2x" style="color: var(--primary)"></i>
+                    <div class="stat-number" id="totalUsers">0</div>
+                    <div class="stat-label">ผู้ใช้ทั้งหมด</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-robot fa-2x" style="color: var(--success)"></i>
+                    <div class="stat-number" id="totalBots">0</div>
+                    <div class="stat-label">บอททั้งหมด</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-play-circle fa-2x" style="color: var(--warning)"></i>
+                    <div class="stat-number" id="activeBots">0</div>
+                    <div class="stat-label">บอทที่กำลังทำงาน</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="users" class="tab-content" style="display: none;">
+            <div class="content-header">
+                <h1>จัดการผู้ใช้</h1>
+                <input type="text" class="search-box" id="userSearch" placeholder="ค้นหาผู้ใช้...">
+            </div>
+            <div class="data-table-container">
+                <table class="data-table" id="userTable">
+                    <thead>
+                        <tr>
+                            <th>ชื่อผู้ใช้</th>
+                            <th>จำนวนบอท</th>
+                            <th>การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="bots" class="tab-content" style="display: none;">
+            <div class="content-header">
+                <h1>จัดการบอท</h1>
+                <input type="text" class="search-box" id="botSearch" placeholder="ค้นหาบอท...">
+            </div>
+            <div class="data-table-container">
+                <table class="data-table" id="botTable">
+                    <thead>
+                        <tr>
+                            <th>ชื่อบอท</th>
+                            <th>เจ้าของ</th>
+                            <th>สถานะ</th>
+                            <th>การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="botTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="credits" class="tab-content" style="display: none;">
+            <div class="content-header">
+                <h1>จัดการเครดิต</h1>
+                <input type="text" class="search-box" id="creditSearch" placeholder="ค้นหาผู้ใช้...">
+            </div>
+            <div class="data-table-container">
+                <table class="data-table" id="creditTable">
+                    <thead>
+                        <tr>
+                            <th>ชื่อผู้ใช้</th>
+                            <th>เครดิตปัจจุบัน</th>
+                            <th>การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="creditTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="settings" class="tab-content" style="display: none;">
+            <div class="content-header">
+                <h1>ตั้งค่าระบบ</h1>
+            </div>
+            
+            <div class="settings-card">
+                <h3><i class="fas fa-coins"></i> ตั้งค่าเครดิต</h3>
+                <div class="settings-row">
+                    <span>เครดิตเริ่มต้นสำหรับผู้ใช้ใหม่:</span>
+                    <span id="defaultCreditsValue" class="settings-value">60</span>
+                    <button class="btn btn-primary" onclick="changeDefaultCredits()">
+                        <i class="fas fa-edit"></i> แก้ไข
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h3><i class="fas fa-ticket"></i> ตั้งค่าโค้ดแลกเครดิต</h3>
+                <div class="settings-row">
+                    <button class="btn btn-primary" onclick="generateNewCode()">
+                        <i class="fas fa-plus"></i> สร้างโค้ดใหม่
+                    </button>
+                </div>
+                <div id="codes-list" style="margin-top: 15px;">
+                    <!-- โค้ดจะถูกแสดงที่นี่ -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let users = {};
+        let bots = {};
+        let userChart = null;
+        let botChart = null;
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.getElementById(tabId).style.display = 'block';
+            document.querySelector(`[href="#${tabId}"]`).classList.add('active');
+        }
+
+        // ฟังก์ชันสำหรับสร้างกราฟ
+        function createCharts() {
+            // ทำลายกราฟเก่าถ้ามีอยู่
+            if (userChart) {
+                userChart.destroy();
+            }
+            if (botChart) {
+                botChart.destroy();
+            }
+
+            // สร้างกราฟสถิติผู้ใช้
+            const userCtx = document.getElementById('userStatsChart').getContext('2d');
+            userChart = new Chart(userCtx, {
+                type: 'line',
+                data: {
+                    labels: getLastSevenDays(),
+                    datasets: [{
+                        label: 'จำนวนผู้ใช้',
+                        data: Object.keys(users).length > 0 ? [Object.keys(users).length] : [0],
+                        borderColor: '#00d4ff',
+                        tension: 0.1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'สถิติผู้ใช้งาน',
+                            color: '#d9e1e8'
+                        },
+                        legend: {
+                            labels: {
+                                color: '#d9e1e8'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#d9e1e8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#d9e1e8'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // สร้างกราฟสถิติบอท
+            const botCtx = document.getElementById('botStatsChart').getContext('2d');
+            const activeBots = Object.values(bots).filter(bot => bot.status === 'กำลังทำงาน').length;
+            const inactiveBots = Object.values(bots).filter(bot => bot.status !== 'กำลังทำงาน').length;
+
+            botChart = new Chart(botCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['บอทที่กำลังทำงาน', 'บอทที่ไม่ได้ทำงาน'],
+                    datasets: [{
+                        data: [activeBots, inactiveBots],
+                        backgroundColor: ['#00cc99', '#ff3366'],
+                        borderColor: '#1c1c2b',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'สถานะบอททั้งหมด',
+                            color: '#d9e1e8'
+                        },
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#d9e1e8'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ฟังก์ชันสำหรับสร้างวันที่ย้อนหลัง 7 วัน
+        function getLastSevenDays() {
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                days.push(date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }));
+            }
+            return days;
+        }
+
+        async function loadData() {
+            try {
+                // แสดง loading indicator
+                Swal.fire({
+                    title: 'กำลังโหลดข้อมูล...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                const [usersResponse, botsResponse] = await Promise.all([
+                    fetch('/admin/users').then(res => {
+                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                        return res.json();
+                    }),
+                    fetch('/admin/bots').then(res => {
+                        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                        return res.json();
+                    })
+                ]);
+
+                // ตรวจสอบว่าข้อมูลที่ได้รับมาถูกต้อง
+                if (!usersResponse || !botsResponse) {
+                    throw new Error('ข้อมูลที่ได้รับไม่ถูกต้อง');
+                }
+
+                users = usersResponse;
+                bots = botsResponse;
+
+                // Load default credits setting
+                const settingsResponse = await fetch('/admin/settings');
+                if (settingsResponse.ok) {
+                    const settings = await settingsResponse.json();
+                    document.getElementById('defaultCreditsValue').textContent = settings.defaultCredits;
+                }
+
+                updateStats();
+                renderTables();
+                createCharts();
+                await loadCodes();
+
+                // ปิด loading indicator และแสดงข้อความสำเร็จ
+                Swal.fire({
+                    icon: 'success',
+                    title: 'โหลดข้อมูลสำเร็จ',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8'
+                });
+            } catch (error) {
+                console.error('Error loading data:', error);
+                
+                // แสดงข้อความผิดพลาดที่ชัดเจน
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาดในการโหลดข้อมูล',
+                    html: `
+                        <div style="text-align: left;">
+                            <p>สาเหตุที่เป็นไปได้:</p>
+                            <ul>
+                                <li>การเชื่อมต่อกับเซิร์ฟเวอร์มีปัญหา</li>
+                                <li>ฐานข้อมูลไม่สามารถเข้าถึงได้</li>
+                                <li>เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่</li>
+                            </ul>
+                            <p>ข้อความผิดพลาด: ${error.message}</p>
+                        </div>
+                    `,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonText: 'ลองใหม่',
+                    showCancelButton: true,
+                    cancelButtonText: 'รีเฟรชหน้า'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        loadData(); // ลองโหลดข้อมูลใหม่
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        window.location.reload(); // รีเฟรชหน้าเว็บ
+                    }
+                });
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalUsers').textContent = Object.keys(users).length;
+            document.getElementById('totalBots').textContent = Object.keys(bots).length;
+            document.getElementById('activeBots').textContent = 
+                Object.values(bots).filter(bot => bot.status === 'กำลังทำงาน').length;
+        }
+
+        function renderTables() {
+            const userTableBody = document.getElementById('userTableBody');
+            const creditTableBody = document.getElementById('creditTableBody');
+            userTableBody.innerHTML = '';
+            creditTableBody.innerHTML = '';
+
+            for (const [username, user] of Object.entries(users)) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><i class="fas fa-user"></i> ${username}</td>
+                    <td><i class="fas fa-robot"></i> ${user.bots?.length || 0}</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="editUser('${username}')">
+                            <i class="fas fa-edit"></i> แก้ไข
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteUser('${username}')">
+                            <i class="fas fa-trash"></i> ลบ
+                        </button>
+                    </td>
+                `;
+                userTableBody.appendChild(row);
+            }
+
+            // Render credit table
+            for (const [username, user] of Object.entries(users)) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><i class="fas fa-user"></i> ${username}</td>
+                    <td><i class="fas fa-coins"></i> ${user.credits || 0}</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="addCredits('${username}')">
+                            <i class="fas fa-plus"></i> เพิ่มเครดิต
+                        </button>
+                        <button class="btn btn-warning" onclick="removeCredits('${username}')">
+                            <i class="fas fa-minus"></i> ลดเครดิต
+                        </button>
+                    </td>
+                `;
+                creditTableBody.appendChild(row);
+            }
+
+            const botTableBody = document.getElementById('botTableBody');
+            botTableBody.innerHTML = '';
+
+            for (const [botId, bot] of Object.entries(bots)) {
+                const row = document.createElement('tr');
+                const statusClass = bot.status === 'กำลังทำงาน' ? 'success' : 'warning';
+                row.innerHTML = `
+                    <td><i class="fas fa-robot"></i> ${botId}</td>
+                    <td><i class="fas fa-user"></i> ${bot.owner || 'ไม่มีเจ้าของ'}</td>
+                    <td><span class="status-${statusClass}">${bot.status}</span></td>
+                    <td>
+                        <button class="btn btn-primary" onclick="editBot('${botId}')">
+                            <i class="fas fa-edit"></i> แก้ไข
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteBot('${botId}')">
+                            <i class="fas fa-trash"></i> ลบ
+                        </button>
+                    </td>
+                `;
+                botTableBody.appendChild(row);
+            }
+        }
+
+        async function deleteUser(username) {
+            const result = await Swal.fire({
+                title: 'ยืนยันการลบผู้ใช้',
+                html: `
+                    <div style="text-align: center;">
+                        <i class="fas fa-user-slash" style="font-size: 4em; color: var(--danger); margin: 20px 0;"></i>
+                        <p style="margin: 10px 0;">คุณกำลังจะลบผู้ใช้:</p>
+                        <p style="color: var(--primary); font-size: 1.2em; font-weight: bold;">${username}</p>
+                        <p style="color: var(--danger); font-size: 0.9em; margin-top: 20px;">การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'ลบผู้ใช้',
+                cancelButtonText: 'ยกเลิก',
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#ff3366',
+                cancelButtonColor: '#666699'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/users/${username}`, { 
+                        method: 'DELETE' 
+                    });
+
+                    if (!response.ok) throw new Error('Failed to delete user');
+
+                    delete users[username];
+                    updateStats();
+                    renderTables();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ!',
+                        text: `ลบผู้ใช้ ${username} เรียบร้อยแล้ว`,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'ไม่สามารถลบผู้ใช้ได้',
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#ff3366'
+                    });
+                }
+            }
+        }
+
+        async function deleteBot(botId) {
+            const result = await Swal.fire({
+                title: 'ยืนยันการลบบอท',
+                html: `
+                    <div style="text-align: center;">
+                        <i class="fas fa-robot" style="font-size: 4em; color: var(--danger); margin: 20px 0;"></i>
+                        <p style="margin: 10px 0;">คุณกำลังจะลบบอท:</p>
+                        <p style="color: var(--primary); font-size: 1.2em; font-weight: bold;">${botId}</p>
+                        <p style="color: var(--danger); font-size: 0.9em; margin-top: 20px;">การดำเนินการนี้ไม่สามารถย้อนกลับได้</p>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'ลบบอท',
+                cancelButtonText: 'ยกเลิก',
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#ff3366',
+                cancelButtonColor: '#666699'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/bots/${botId}`, { 
+                        method: 'DELETE' 
+                    });
+
+                    if (!response.ok) throw new Error('Failed to delete bot');
+
+                    delete bots[botId];
+                    updateStats();
+                    renderTables();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ!',
+                        text: `ลบบอท ${botId} เรียบร้อยแล้ว`,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                } catch (error) {
+                    console.error('Error deleting bot:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'ไม่สามารถลบบอทได้',
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#ff3366'
+                    });
+                }
+            }
+        }
+
+        async function editBot(botId) {
+            try {
+                const response = await fetch(`/bot/${botId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error('Failed to get bot details');
+                
+                const botData = await response.json();
+
+                Swal.fire({
+                    title: 'แก้ไขบอท',
+                    html: `
+                        <div style="text-align: center;">
+                            <i class="fas fa-robot" style="font-size: 3em; color: var(--primary); margin: 20px 0;"></i>
+                            <p style="margin: 10px 0;">กำลังแก้ไขบอท:</p>
+                            <p style="color: var(--primary); font-size: 1.2em; font-weight: bold;">${botId}</p>
+                        </div>
+                        <div class="form-group" style="margin-top: 20px;">
+                            <div class="bot-actions" style="display: grid; gap: 10px;">
+                                <button class="btn btn-primary" onclick="startBot('${botId}')">
+                                    <i class="fas fa-play"></i> เริ่มการทำงาน
+                                </button>
+                                <button class="btn btn-warning" onclick="stopBot('${botId}')">
+                                    <i class="fas fa-stop"></i> หยุดการทำงาน
+                                </button>
+                                <button class="btn btn-info" onclick="viewLogs('${botId}')">
+                                    <i class="fas fa-list"></i> ดูบันทึกการทำงาน
+                                </button>
+                                <button class="btn btn-success" onclick="installPackages('${botId}')">
+                                    <i class="fas fa-download"></i> ติดตั้งแพ็คเกจ
+                                </button>
+                                <button class="btn btn-secondary" onclick="editFiles('${botId}')">
+                                    <i class="fas fa-code"></i> แก้ไขไฟล์
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteBot('${botId}')">
+                                    <i class="fas fa-trash"></i> ลบบอท
+                                </button>
+                            </div>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'ตกลง',
+                    cancelButtonText: 'ยกเลิก',
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#00d4ff',
+                    cancelButtonColor: '#666699',
+                    focusConfirm: false
+                });
+            } catch (error) {
+                console.error('Error fetching bot details:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถดึงข้อมูลบอทได้',
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#ff3366'
+                });
+            }
+        }
+
+        async function startBot(botId) {
+            try {
+                const response = await fetch(`/start/${botId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'แอดมิน' })
+                });
+                if (!response.ok) throw new Error('ไม่สามารถเริ่มบอทได้');
+                await loadData();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'เริ่มบอทสำเร็จ',
+                    background: '#1c1c2b',
+                    color: '#d9e1e8'
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8'
+                });
+            }
+        }
+
+        async function stopBot(botId) {
+            try {
+                const response = await fetch(`/stop/${botId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'แอดมิน' })
+                });
+                if (!response.ok) throw new Error('ไม่สามารถหยุดบอทได้');
+                await loadData();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'หยุดบอทสำเร็จ',
+                    background: '#1c1c2b',
+                    color: '#d9e1e8'
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8'
+                });
+            }
+        }
+
+        async function viewLogs(botId) {
+            try {
+                const response = await fetch(`/status/${botId}?username=แอดมิน`);
+                const data = await response.json();
+                if (!response.ok) throw new Error('ไม่สามารถดึงข้อมูลได้');
+                
+                Swal.fire({
+                    title: 'บันทึกการทำงาน',
+                    html: `<div style="max-height: 300px; overflow-y: auto; text-align: left;">
+                        ${data.logs.map(log => `<div>${log}</div>`).join('')}
+                    </div>`,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    width: '600px'
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8'
+                });
+            }
+        }
+
+        async function installPackages(botId) {
+            const { value: command } = await Swal.fire({
+                title: 'ติดตั้งแพ็คเกจ',
+                input: 'text',
+                inputLabel: 'ระบุคำสั่งติดตั้ง (เช่น discord.js)',
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                inputValidator: (value) => {
+                    if (!value) return 'กรุณาระบุแพ็คเกจที่ต้องการติดตั้ง';
+                }
+            });
+
+            if (command) {
+                try {
+                    const response = await fetch(`/install/${botId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            installCommand: command,
+                            username: 'แอดมิน'
+                        })
+                    });
+                    if (!response.ok) throw new Error('ไม่สามารถติดตั้งแพ็คเกจได้');
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'เริ่มติดตั้งแพ็คเกจแล้ว',
+                        text: 'กรุณารอสักครู่...',
+                        background: '#1c1c2b',
+                        color: '#d9e1e8'
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: error.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8'
+                    });
+                }
+            }
+        }
+
+        async function editFiles(botId) {
+            try {
+                const response = await fetch(`/files/${botId}?username=แอดมิน`);
+                const files = await response.json();
+                
+                const fileList = files.map(file => 
+                    `<button class="btn btn-secondary mb-2" onclick="editFile('${botId}', '${file.path}')">
+                        ${file.type === 'folder' ? '📁' : '📄'} ${file.path}
+                    </button>`
+                ).join('<br>');
+
+                Swal.fire({
+                    title: 'เลือกไฟล์ที่ต้องการแก้ไข',
+                    html: `<div style="max-height: 400px; overflow-y: auto;">
+                        ${fileList}
+                    </div>`,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    showConfirmButton: false
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8'
+                });
+            }
+        }
+
+        async function editFile(botId, filePath) {
+            try {
+                const response = await fetch(`/file/${botId}/${filePath}?username=แอดมิน`);
+                const data = await response.json();
+                
+                const { value: newContent } = await Swal.fire({
+                    title: `แก้ไขไฟล์: ${filePath}`,
+                    input: 'textarea',
+                    inputValue: data.content,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    width: '800px',
+                    confirmButtonText: 'บันทึก',
+                    showCancelButton: true,
+                    cancelButtonText: 'ยกเลิก'
+                });
+
+                if (newContent !== undefined) {
+                    const saveResponse = await fetch(`/file/${botId}/${filePath}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            content: newContent,
+                            username: 'แอดมิน'
+                        })
+                    });
+
+                    if (!saveResponse.ok) throw new Error('ไม่สามารถบันทึกไฟล์ได้');
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกไฟล์สำเร็จ',
+                        background: '#1c1c2b',
+                        color: '#d9e1e8'
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8'
+                });
+            }
+        }
+
+        async function editUser(username) {
+            try {
+                const result = await Swal.fire({
+                    title: 'แก้ไขโปรไฟล์',
+                    html: `
+                        <div style="text-align: center;">
+                            <i class="fas fa-user-edit" style="font-size: 3em; color: var(--primary); margin: 20px 0;"></i>
+                            <p style="margin: 10px 0;">แก้ไขข้อมูลสำหรับ:</p>
+                            <p style="color: var(--primary); font-size: 1.2em; font-weight: bold;">${username}</p>
+                        </div>
+                        <div class="form-group">
+                            <label for="newUsername">ชื่อผู้ใช้ใหม่ (ทิ้งว่างหากไม่เปลี่ยน):</label>
+                            <input type="text" id="newUsername" class="swal2-input" placeholder="ชื่อผู้ใช้ใหม่" value="${username}">
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">รหัสผ่านใหม่ (ทิ้งว่างหากไม่เปลี่ยน):</label>
+                            <input type="password" id="newPassword" class="swal2-input" placeholder="รหัสผ่านใหม่">
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'บันทึก',
+                    cancelButtonText: 'ยกเลิก',
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#00d4ff',
+                    cancelButtonColor: '#666699',
+                    preConfirm: () => {
+                        const newUsername = document.getElementById('newUsername').value.trim();
+                        const newPassword = document.getElementById('newPassword').value.trim();
+
+                        if (!newUsername && !newPassword) {
+                            Swal.showValidationMessage('กรุณากรอกชื่อผู้ใช้ใหม่หรือรหัสผ่านใหม่');
+                            return false;
+                        }
+
+                        return { newUsername, newPassword };
+                    }
+                });
+
+                if (result.isConfirmed) {
+                    const { newUsername, newPassword } = result.value;
+
+                    const updateData = {};
+                    if (newUsername && newUsername !== username) {
+                        updateData.newUsername = newUsername;
+                    }
+                    if (newPassword) {
+                        updateData.newPassword = newPassword;
+                    }
+
+                    const response = await fetch(`/profile/${username}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(errorText || 'ไม่สามารถอัพเดทข้อมูลได้');
+                    }
+
+                    if (newUsername && newUsername !== username) {
+                        users[newUsername] = users[username];
+                        delete users[username];
+                        Object.values(bots).forEach(bot => {
+                            if (bot.owner === username) bot.owner = newUsername;
+                        });
+                    }
+                    if (newPassword) {
+                        users[newUsername || username].password = newPassword;
+                    }
+
+                    await loadData();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ!',
+                        text: 'อัพเดทโปรไฟล์สำเร็จ',
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating user:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#ff3366'
+                });
+            }
+        }
+
+        async function changeDefaultCredits() {
+            const { value: newCredits } = await Swal.fire({
+                title: 'ตั้งค่าเครดิตเริ่มต้น',
+                html: `
+                    <div style="text-align: center;">
+                        <i class="fas fa-coins" style="font-size: 3em; color: var(--warning); margin: 20px 0;"></i>
+                        <p style="margin: 10px 0;">กำหนดจำนวนเครดิตเริ่มต้นสำหรับผู้ใช้ใหม่</p>
+                    </div>
+                `,
+                input: 'number',
+                inputValue: document.getElementById('defaultCreditsValue').textContent,
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#00d4ff',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value || value < 0) {
+                        return 'กรุณาระบุจำนวนเครดิตที่ถูกต้อง';
+                    }
+                }
+            });
+
+            if (newCredits) {
+                try {
+                    const response = await fetch('/admin/settings/default-credits', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ defaultCredits: parseInt(newCredits) })
+                    });
+
+                    if (!response.ok) throw new Error('ไม่สามารถบันทึกการตั้งค่าได้');
+
+                    document.getElementById('defaultCreditsValue').textContent = newCredits;
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกการตั้งค่าสำเร็จ',
+                        text: `ตั้งค่าเครดิตเริ่มต้นเป็น ${newCredits} เครดิต`,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: error.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#ff3366'
+                    });
+                }
+            }
+        }
+
+        async function generateNewCode() {
+            try {
+                const { value: formValues } = await Swal.fire({
+                    title: 'สร้างโค้ดแลกเครดิตใหม่',
+                    html: `
+                        <div style="text-align: left; margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label for="swal-input1">จำนวนเครดิต:</label>
+                                <input type="number" id="swal-input1" class="swal2-input" value="100" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="swal-input2">จำนวนครั้งที่ใช้ได้:</label>
+                                <input type="number" id="swal-input2" class="swal2-input" value="1" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="swal-input3">หมดอายุใน (ชั่วโมง):</label>
+                                <input type="number" id="swal-input3" class="swal2-input" value="24" min="1">
+                            </div>
+                        </div>
+                    `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'สร้างโค้ด',
+                    cancelButtonText: 'ยกเลิก',
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    preConfirm: () => {
+                        const credits = parseInt(document.getElementById('swal-input1').value);
+                        const maxUses = parseInt(document.getElementById('swal-input2').value);
+                        const expireHours = parseInt(document.getElementById('swal-input3').value);
+                        
+                        if (!credits || credits <= 0) {
+                            Swal.showValidationMessage('กรุณาระบุจำนวนเครดิตที่มากกว่า 0');
+                            return false;
+                        }
+                        if (!maxUses || maxUses <= 0) {
+                            Swal.showValidationMessage('กรุณาระบุจำนวนครั้งที่ใช้ได้ที่มากกว่า 0');
+                            return false;
+                        }
+                        if (!expireHours || expireHours <= 0) {
+                            Swal.showValidationMessage('กรุณาระบุเวลาหมดอายุที่มากกว่า 0');
+                            return false;
+                        }
+                        
+                        return {
+                            credits: credits,
+                            maxUses: maxUses,
+                            expireHours: expireHours
+                        };
+                    }
+                });
+
+                if (formValues) {
+                    const response = await fetch('/admin/codes/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formValues)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'ไม่สามารถสร้างโค้ดได้');
+                    }
+
+                    const data = await response.json();
+                    await loadCodes();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สร้างโค้ดสำเร็จ!',
+                        html: `โค้ดของคุณคือ: <br><strong style="color: var(--primary); font-size: 1.2em;">${data.code}</strong>`,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                }
+            } catch (error) {
+                console.error('Error generating code:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#ff3366'
+                });
+            }
+        }
+
+        async function loadCodes() {
+            try {
+                const response = await fetch('/admin/codes');
+                if (!response.ok) throw new Error('ไม่สามารถโหลดรายการโค้ดได้');
+                const codes = await response.json();
+                
+                const codesListHtml = codes.map(code => `
+                    <div class="code-item" style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="font-family: monospace; color: var(--accent-primary);">${code.code}</span>
+                                <br>
+                                <small style="color: var(--text-secondary);">
+                                    เครดิต: ${code.credits} | 
+                                    ใช้ได้: ${code.uses}/${code.max_uses} ครั้ง | 
+                                    หมดอายุ: ${new Date(parseInt(code.expire_time)).toLocaleString('th-TH')}
+                                </small>
+                            </div>
+                            <button class="btn btn-danger" onclick="deleteCode('${code.code}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('codes-list').innerHTML = codesListHtml || '<p style="color: var(--text-secondary);">ยังไม่มีโค้ดที่สร้าง</p>';
+            } catch (error) {
+                console.error('Error loading codes:', error);
+            }
+        }
+
+        async function deleteCode(code) {
+            const result = await Swal.fire({
+                title: 'ยืนยันการลบ',
+                text: `คุณต้องการลบโค้ด ${code} ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ลบ',
+                cancelButtonText: 'ยกเลิก',
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#ff3366'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/codes/${code}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) throw new Error('ไม่สามารถลบโค้ดได้');
+                    
+                    await loadCodes();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ลบโค้ดสำเร็จ',
+                        text: 'ลบโค้ดเรียบร้อยแล้ว',
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: error.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#ff3366'
+                    });
+                }
+            }
+        }
+
+        // Search functionality
+        document.getElementById('userSearch').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.getElementById('userTableBody').getElementsByTagName('tr');
+
+            for (const row of rows) {
+                const username = row.cells[0].textContent.toLowerCase();
+                row.style.display = username.includes(searchTerm) ? '' : 'none';
+            }
+        });
+
+        document.getElementById('botSearch').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.getElementById('botTableBody').getElementsByTagName('tr');
+
+            for (const row of rows) {
+                const botId = row.cells[0].textContent.toLowerCase();
+                const owner = row.cells[1].textContent.toLowerCase();
+                row.style.display = 
+                    botId.includes(searchTerm) || owner.includes(searchTerm) ? '' : 'none';
+            }
+        });
+
+        function refreshData() {
+            loadData();
+        }
+
+        async function removeCredits(username) {
+            const { value: credits } = await Swal.fire({
+                title: 'ลดเครดิต',
+                input: 'number',
+                inputLabel: `ลดเครดิตของ ${username}`,
+                inputPlaceholder: 'ระบุจำนวนเครดิต',
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#ff3366',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value || value <= 0) {
+                        return 'กรุณาระบุจำนวนเครดิตที่ต้องการลด';
+                    }
+                }
+            });
+
+            if (credits) {
+                try {
+                    const response = await fetch(`/admin/credits/${username}/remove`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ credits: parseInt(credits) })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error);
+                    }
+
+                    await loadData();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ!',
+                        text: 'ลดเครดิตสำเร็จ',
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: error.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#ff3366'
+                    });
+                }
+            }
+        }
+
+        async function addCredits(username) {
+            const { value: credits } = await Swal.fire({
+                title: 'เพิ่มเครดิต',
+                input: 'number',
+                inputLabel: `เพิ่มเครดิตให้ ${username}`,
+                inputPlaceholder: 'ระบุจำนวนเครดิต',
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#00d4ff',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value || value <= 0) {
+                        return 'กรุณาระบุจำนวนเครดิตที่ต้องการเพิ่ม';
+                    }
+                }
+            });
+
+            if (credits) {
+                try {
+                    const response = await fetch(`/admin/credits/${username}/add`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ credits: parseInt(credits) })
+                    });
+
+                    if (!response.ok) throw new Error('ไม่สามารถเพิ่มเครดิตได้');
+                    
+                    await loadData();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'เพิ่มเครดิตสำเร็จ',
+                        text: `เพิ่ม ${credits} เครดิตให้ ${username} แล้ว`,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8'
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: error.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8'
+                    });
+                }
+            }
+        }
+
+        async function removeCredits(username) {
+            const { value: credits } = await Swal.fire({
+                title: 'ลดเครดิต',
+                input: 'number',
+                inputLabel: `ลดเครดิตของ ${username}`,
+                inputPlaceholder: 'ระบุจำนวนเครดิต',
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#ff3366',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value || value <= 0) {
+                        return 'กรุณาระบุจำนวนเครดิตที่ต้องการลด';
+                    }
+                }
+            });
+
+            if (credits) {
+                try {
+                    const response = await fetch(`/admin/credits/${username}/remove`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ credits: parseInt(credits) })
+                    });
+
+                    if (!response.ok) throw new Error('ไม่สามารถลดเครดิตได้');
+                    
+                    await loadData();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ลดเครดิตสำเร็จ',
+                        text: `ลด ${credits} เครดิตของ ${username} แล้ว`,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8'
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: error.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8'
+                    });
+                }
+            }
+        }
+
+        // Credit search functionality
+        document.getElementById('creditSearch').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.getElementById('creditTableBody').getElementsByTagName('tr');
+
+            for (const row of rows) {
+                const username = row.cells[0].textContent.toLowerCase();
+                row.style.display = username.includes(searchTerm) ? '' : 'none';
+            }
+        });
+
+        // Initial load
+        loadData();
+        // Auto refresh every 30 seconds
+        setInterval(loadData, 30000);
+
+        // Initialize with dashboard
+        switchTab('dashboard');
+    </script>
+</body>
+</html>

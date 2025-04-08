@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แลกโค้ด - ระบบจัดการบอท</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --accent-primary: #8a4af3;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --border-color: #dee2e6;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Kanit', sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--bg-secondary) !important;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .navbar-dark {
+            background-color: var(--bg-secondary) !important;
+        }
+
+        .navbar-dark .navbar-brand,
+        .navbar-dark .nav-link {
+            color: var(--text-primary) !important;
+        }
+
+        .navbar-dark .navbar-toggler {
+            border-color: var(--border-color);
+        }
+
+        .container {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-control {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .form-control:focus {
+            background-color: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.2rem rgba(138, 74, 243, 0.15);
+        }
+
+        .form-text {
+            color: var(--text-secondary);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-primary);
+            border: none;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #7c3de0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(138, 74, 243, 0.2);
+        }
+
+        .alert {
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+        }
+
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            border-color: rgba(40, 167, 69, 0.2);
+            color: var(--success);
+        }
+
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-color: rgba(220, 53, 69, 0.2);
+            color: var(--danger);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .card-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-robot me-2"></i>ระบบจัดการบอท
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">หน้าหลัก</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/redeem.html">แลกโค้ด/เติมเงิน</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="creditsDisplay">
+                            <i class="fas fa-coins me-1"></i>เครดิต: 0
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="usernameDisplay"></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logoutButton">
+                            <i class="fas fa-sign-out-alt me-1"></i>ออกจากระบบ
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="redeem-container">
+            <!-- โค้ดแลกเครดิต -->
+            <div class="card mx-auto" style="max-width: 500px;">
+                <div class="card-body">
+                    <h2 class="card-title text-center">
+                        <i class="fas fa-ticket-alt me-2"></i>แลกโค้ดเครดิต
+                    </h2>
+                    <div id="redeemAlertArea"></div>
+                    <form id="redeemForm">
+                        <div class="mb-3">
+                            <label for="redeemCode" class="form-label">
+                                <i class="fas fa-key me-1"></i>รหัสแลกเครดิต
+                            </label>
+                            <input type="text" class="form-control" id="redeemCode" 
+                                placeholder="กรอกโค้ดที่ต้องการแลก" required>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>กรอกโค้ดที่ได้รับเพื่อแลกเครดิต
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-exchange-alt me-2"></i>แลกโค้ด
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let username = localStorage.getItem('username');
+        if (!username) {
+            window.location.href = '/login.html';
+        }
+
+        document.getElementById('usernameDisplay').textContent = username;
+
+        // แสดงเครดิตปัจจุบัน
+        async function updateCredits() {
+            try {
+                const response = await fetch(`/credits/${username}`);
+                const data = await response.json();
+                document.getElementById('creditsDisplay').innerHTML = 
+                    `<i class="fas fa-coins me-1"></i>เครดิต: ${data.credits || 0}`;
+            } catch (error) {
+                console.error('Error fetching credits:', error);
+            }
+        }
+        updateCredits();
+
+        // จัดการการออกจากระบบ
+        document.getElementById('logoutButton').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('username');
+            window.location.href = '/login.html';
+        });
+
+        // จัดการแลกโค้ด
+        document.getElementById('redeemForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const code = document.getElementById('redeemCode').value.trim();
+            const alertArea = document.getElementById('redeemAlertArea');
+            
+            try {
+                const response = await fetch(`/redeem/${code}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alertArea.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5><i class="fas fa-check-circle me-2"></i>แลกโค้ดสำเร็จ!</h5>
+                            <p class="mb-1">ได้รับเครดิต: ${data.creditsReceived} เครดิต</p>
+                            <p class="mb-0">เครดิตคงเหลือ: ${data.newCredits} เครดิต</p>
+                        </div>
+                    `;
+                    document.getElementById('redeemCode').value = '';
+                    updateCredits();
+                } else {
+                    alertArea.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i>แลกโค้ดไม่สำเร็จ</h5>
+                            <p class="mb-0">${data.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                alertArea.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-triangle me-2"></i>เกิดข้อผิดพลาด</h5>
+                        <p class="mb-0">ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
