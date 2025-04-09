@@ -114,7 +114,7 @@
         }
 
         .search-box:focus {
-            border-color: var(--primary);
+            border-color: var (--primary);
             outline: none;
             box-shadow: 0 0 0 2px rgba(0,212,255,0.2);
         }
@@ -190,7 +190,7 @@
 
         .btn-primary {
             background: var(--primary);
-            color: var(--darker);
+            color: var (--darker);
         }
 
         .btn-danger {
@@ -200,7 +200,7 @@
 
         .btn-warning {
             background: var(--warning);
-            color: var(--darker);
+            color: var (--darker);
         }
 
         .btn:hover {
@@ -228,8 +228,8 @@
                 top: 20px;
                 left: 20px;
                 z-index: 1001;
-                background: var(--primary);
-                color: var(--darker);
+                background: var (--primary);
+                color: var (--darker);
                 padding: 10px;
                 border-radius: 8px;
                 cursor: pointer;
@@ -374,6 +374,20 @@
                 </div>
             </div>
 
+            <!-- เพิ่มกราฟแสดงสถิติเติมเงิน -->
+            <div class="chart-grid">
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fas fa-coins"></i> การเติมเงินวันนี้</h3>
+                    <canvas id="dailyDepositChart"></canvas>
+                    <div class="stat-number" id="totalDailyDeposit">0 บาท</div>
+                </div>
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 15px; color: var(--primary);"><i class="fas fa-calendar"></i> การเติมเงินเดือนนี้</h3>
+                    <canvas id="monthlyDepositChart"></canvas>
+                    <div class="stat-number" id="totalMonthlyDeposit">0 บาท</div>
+                </div>
+            </div>
+
             <div class="stats-grid">
                 <div class="stat-card">
                     <i class="fas fa-users fa-2x" style="color: var(--primary)"></i>
@@ -486,6 +500,8 @@
         let bots = {};
         let userChart = null;
         let botChart = null;
+        let dailyDepositChart = null;
+        let monthlyDepositChart = null;
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
@@ -510,6 +526,12 @@
             }
             if (botChart) {
                 botChart.destroy();
+            }
+            if (dailyDepositChart) {
+                dailyDepositChart.destroy();
+            }
+            if (monthlyDepositChart) {
+                monthlyDepositChart.destroy();
             }
 
             // สร้างกราฟสถิติผู้ใช้
@@ -595,17 +617,160 @@
                     }
                 }
             });
+            
+            // สร้างกราฟข้อมูลการเติมเงินวันนี้ (แยกตามช่วงเวลา)
+            const dailyDepositCtx = document.getElementById('dailyDepositChart').getContext('2d');
+            
+            // โหลดข้อมูลการเติมเงินวันนี้จาก API
+            fetch('/admin/payment-stats/daily')
+                .then(response => {
+                    if (!response.ok) throw new Error('ไม่สามารถโหลดข้อมูลสถิติรายวันได้');
+                    return response.json();
+                })
+                .then(data => {
+                    const periods = data.periods.map(p => p.period);
+                    const amounts = data.periods.map(p => p.amount);
+                    const totalDailyDeposit = data.dailyTotal;
+                    
+                    document.getElementById('totalDailyDeposit').textContent = formatCurrency(totalDailyDeposit) + ' บาท';
+                    
+                    dailyDepositChart = new Chart(dailyDepositCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: periods,
+                            datasets: [{
+                                label: 'เติมเงิน (บาท)',
+                                data: amounts,
+                                backgroundColor: '#00cc99',
+                                borderColor: '#00cc99',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#d9e1e8'
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#d9e1e8',
+                                        callback: function(value) {
+                                            return formatCurrency(value);
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#d9e1e8'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(err => {
+                    console.error('Error loading daily stats:', err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ไม่สามารถโหลดข้อมูลสถิติได้',
+                        text: err.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8'
+                    });
+                });
+            
+            // สร้างกราฟข้อมูลการเติมเงินเดือนนี้ (แยกตามวัน)
+            const monthlyDepositCtx = document.getElementById('monthlyDepositChart').getContext('2d');
+            
+            // โหลดข้อมูลการเติมเงินเดือนนี้จาก API
+            fetch('/admin/payment-stats/monthly')
+                .then(response => {
+                    if (!response.ok) throw new Error('ไม่สามารถโหลดข้อมูลสถิติรายเดือนได้');
+                    return response.json();
+                })
+                .then(data => {
+                    const days = data.dailyData.map(d => d.day);
+                    const amounts = data.dailyData.map(d => d.amount);
+                    const totalMonthlyDeposit = data.monthlyTotal;
+                    
+                    document.getElementById('totalMonthlyDeposit').textContent = formatCurrency(totalMonthlyDeposit) + ' บาท';
+                    
+                    monthlyDepositChart = new Chart(monthlyDepositCtx, {
+                        type: 'line',
+                        data: {
+                            labels: days,
+                            datasets: [{
+                                label: 'เติมเงิน (บาท)',
+                                data: amounts,
+                                backgroundColor: 'rgba(0, 212, 255, 0.2)',
+                                borderColor: '#00d4ff',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#d9e1e8'
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#d9e1e8',
+                                        callback: function(value) {
+                                            return formatCurrency(value);
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        color: '#d9e1e8',
+                                        maxTicksLimit: 10 // แสดงเฉพาะ 10 ค่าเพื่อให้อ่านง่าย
+                                    }
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(err => {
+                    console.error('Error loading monthly stats:', err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ไม่สามารถโหลดข้อมูลสถิติได้',
+                        text: err.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8'
+                    });
+                });
         }
-
-        // ฟังก์ชันสำหรับสร้างวันที่ย้อนหลัง 7 วัน
-        function getLastSevenDays() {
-            const days = [];
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                days.push(date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }));
-            }
-            return days;
+        
+        // ฟังก์ชันสำหรับจัดรูปแบบสกุลเงิน
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('th-TH').format(value);
         }
 
         async function loadData() {
@@ -1634,6 +1799,22 @@
                 row.style.display = username.includes(searchTerm) ? '' : 'none';
             }
         });
+
+        // ฟังก์ชันสำหรับสร้างวันที่ย้อนหลัง 7 วัน
+        function getLastSevenDays() {
+            const days = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                days.push(date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }));
+            }
+            return days;
+        }
+        
+        // ฟังก์ชันสำหรับจัดรูปแบบสกุลเงิน
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('th-TH').format(value);
+        }
 
         // Initial load
         loadData();
