@@ -236,12 +236,12 @@
             const alertArea = document.getElementById('redeemAlertArea');
             
             try {
-                const response = await fetch(`/redeem/${code}`, {
+                const response = await fetch('/redeem', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username })
+                    body: JSON.stringify({ username, code })
                 });
 
                 const data = await response.json();
@@ -251,7 +251,7 @@
                         <div class="alert alert-success">
                             <h5><i class="fas fa-check-circle me-2"></i>แลกโค้ดสำเร็จ!</h5>
                             <p class="mb-1">ได้รับเครดิต: ${data.creditsReceived} เครดิต</p>
-                            <p class="mb-0">เครดิตคงเหลือ: ${data.newCredits} เครดิต</p>
+                            <p class="mb-0">เครดิตคงเหลือ: ${data.totalCredits} เครดิต</p>
                         </div>
                     `;
                     document.getElementById('redeemCode').value = '';
