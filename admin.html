@@ -62,7 +62,7 @@
         .menu-item {
             padding: 12px 15px;
             border-radius: 8px;
-            color: var(--light);
+            color: var (--light);
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -476,6 +476,13 @@
                     <span>เครดิตเริ่มต้นสำหรับผู้ใช้ใหม่:</span>
                     <span id="defaultCreditsValue" class="settings-value">60</span>
                     <button class="btn btn-primary" onclick="changeDefaultCredits()">
+                        <i class="fas fa-edit"></i> แก้ไข
+                    </button>
+                </div>
+                <div class="settings-row">
+                    <span>เครดิตสำหรับการรันบอท:</span>
+                    <span id="runBotCreditsValue" class="settings-value">15</span>
+                    <button class="btn btn-primary" onclick="changeRunBotCredits()">
                         <i class="fas fa-edit"></i> แก้ไข
                     </button>
                 </div>
@@ -1814,6 +1821,61 @@
         // ฟังก์ชันสำหรับจัดรูปแบบสกุลเงิน
         function formatCurrency(value) {
             return new Intl.NumberFormat('th-TH').format(value);
+        }
+
+        async function changeRunBotCredits() {
+            const { value: newCredits } = await Swal.fire({
+                title: 'ตั้งค่าเครดิตสำหรับการรันบอท',
+                html: `
+                    <div style="text-align: center;">
+                        <i class="fas fa-robot" style="font-size: 3em; color: var(--primary); margin: 20px 0;"></i>
+                        <p style="margin: 10px 0;">กำหนดจำนวนเครดิตที่ต้องใช้ในการรันบอท</p>
+                    </div>
+                `,
+                input: 'number',
+                inputValue: document.getElementById('runBotCreditsValue').textContent,
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#00d4ff',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value || value < 0) {
+                        return 'กรุณาระบุจำนวนเครดิตที่ถูกต้อง';
+                    }
+                }
+            });
+
+            if (newCredits) {
+                try {
+                    const response = await fetch('/admin/settings/run-bot-credits', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ runBotCredits: parseInt(newCredits) })
+                    });
+
+                    if (!response.ok) throw new Error('ไม่สามารถบันทึกการตั้งค่าได้');
+
+                    document.getElementById('runBotCreditsValue').textContent = newCredits;
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกการตั้งค่าสำเร็จ',
+                        text: `ตั้งค่าเครดิตสำหรับการรันบอทเป็น ${newCredits} เครดิต`,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: error.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#ff3366'
+                    });
+                }
+            }
         }
 
         // Initial load
