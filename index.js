@@ -85,6 +85,20 @@ async function initializeDatabase() {
             created_at INTEGER DEFAULT (strftime('%s', 'now'))
         )
     `);
+    
+    // สร้างตาราง payments เพื่อเก็บประวัติการเติมเงิน
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            amount REAL NOT NULL,
+            credits INTEGER NOT NULL,
+            payment_method TEXT NOT NULL,
+            voucher_code TEXT,
+            timestamp INTEGER DEFAULT (strftime('%s', 'now')),
+            FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
+        )
+    `);
 
     // รีเซ็ตสถานะบอททั้งหมดเป็น "หยุด" เมื่อเริ่มเซิร์ฟเวอร์ใหม่
     await db.run('UPDATE bot_states SET status = ?', ['หยุด']);
@@ -1293,124 +1307,102 @@ app.post('/command/:botId', async (req, res) => {
     }
 });
 
-// เพิ่ม endpoints สำหรับจัดการโค้ดแลกเครดิต
-app.post('/admin/codes/generate', async (req, res) => {
-    const { credits, maxUses, expireHours } = req.body;
-    
-    if (!credits || !maxUses || !expireHours || credits <= 0 || maxUses <= 0 || expireHours <= 0) {
-        return res.status(400).json({ error: 'กรุณาระบุข้อมูลให้ถูกต้อง' });
-    }
-
+// เพิ่ม endpoints สำหรับดึงข้อมูลสถิติการเติมเงิน
+app.get('/admin/payment-stats/daily', async (req, res) => {
     try {
-        // สร้างโค้ดแบบสุ่ม
-        const code = crypto.randomBytes(6).toString('hex').toUpperCase();
-        const expireTime = Date.now() + (expireHours * 60 * 60 * 1000);
-
-        await db.run(
-            'INSERT INTO redemption_codes (code, credits, max_uses, expire_time) VALUES (?, ?, ?, ?)',
-            [code, credits, maxUses, expireTime]
+        // ดึงข้อมูลการเติมเงินวันนี้
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayTimestamp = Math.floor(today.getTime() / 1000);
+        
+        // แบ่งเป็น 6 ช่วงเวลา (4 ชั่วโมงต่อช่วง)
+        const periods = [];
+        for (let i = 0; i < 6; i++) {
+            const startPeriod = new Date(today);
+            startPeriod.setHours(i * 4, 0, 0, 0);
+            const endPeriod = new Date(today);
+            endPeriod.setHours((i + 1) * 4, 0, 0, 0);
+            
+            const startTimestamp = Math.floor(startPeriod.getTime() / 1000);
+            const endTimestamp = Math.floor(endPeriod.getTime() / 1000);
+            
+            const periodData = await db.get(
+                'SELECT SUM(amount) as total FROM payments WHERE timestamp >= ? AND timestamp < ?',
+                [startTimestamp, endTimestamp]
+            );
+            
+            periods.push({
+                period: `${i * 4}:00`,
+                amount: periodData.total || 0
+            });
+        }
+        
+        // ดึงยอดรวมการเติมเงินวันนี้
+        const dailyTotal = await db.get(
+            'SELECT SUM(amount) as total FROM payments WHERE timestamp >= ?',
+            [todayTimestamp]
         );
-
-        res.json({ 
-            message: 'สร้างโค้ดสำเร็จ',
-            code,
-            credits,
-            maxUses,
-            expireTime
+        
+        res.json({
+            periods,
+            dailyTotal: dailyTotal.total || 0
         });
     } catch (err) {
-        console.error('Error generating code:', err);
-        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการสร้างโค้ด' });
+        console.error('Error getting daily payment stats:', err);
+        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูลสถิติการเติมเงินรายวัน' });
     }
 });
 
-app.get('/admin/codes', async (req, res) => {
+app.get('/admin/payment-stats/monthly', async (req, res) => {
     try {
-        const codes = await db.all('SELECT * FROM redemption_codes ORDER BY created_at DESC');
-        res.json(codes);
-    } catch (err) {
-        console.error('Error getting codes:', err);
-        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูลโค้ด' });
-    }
-});
-
-app.delete('/admin/codes/:code', async (req, res) => {
-    try {
-        const code = req.params.code;
-        await db.run('DELETE FROM redemption_codes WHERE code = ?', [code]);
-        res.json({ message: 'ลบโค้ดสำเร็จ' });
-    } catch (err) {
-        console.error('Error deleting code:', err);
-        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการลบโค้ด' });
-    }
-});
-
-app.post('/redeem/:code', async (req, res) => {
-    const code = req.params.code;
-    const { username } = req.body;
-
-    if (!username) {
-        return res.status(400).json({ error: 'กรุณาระบุชื่อผู้ใช้' });
-    }
-
-    try {
-        // ตรวจสอบผู้ใช้
-        const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
-        if (!user) {
-            return res.status(404).json({ error: 'ไม่พบผู้ใช้' });
-        }
-
-        // ตรวจสอบโค้ด
-        const redeemCode = await db.get('SELECT * FROM redemption_codes WHERE code = ?', [code]);
-        if (!redeemCode) {
-            return res.status(404).json({ error: 'ไม่พบโค้ด' });
-        }
-
-        // ตรวจสอบการหมดอายุ
-        if (Date.now() > redeemCode.expire_time) {
-            return res.status(400).json({ 
-                error: 'โค้ดหมดอายุแล้ว',
-                code: code,
-                credits: redeemCode.credits,
-                maxUses: redeemCode.max_uses,
-                uses: redeemCode.uses,
-                expireTime: new Date(parseInt(redeemCode.expire_time)).toLocaleString('th-TH')
+        // ดึงข้อมูลการเติมเงินเดือนนี้
+        const now = new Date();
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const firstDayTimestamp = Math.floor(firstDayOfMonth.getTime() / 1000);
+        
+        // จำนวนวันในเดือนปัจจุบัน
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        
+        // แบ่งเป็นรายวัน
+        const dailyData = [];
+        for (let day = 1; day <= daysInMonth; day++) {
+            const startDate = new Date(now.getFullYear(), now.getMonth(), day);
+            startDate.setHours(0, 0, 0, 0);
+            const endDate = new Date(now.getFullYear(), now.getMonth(), day + 1);
+            endDate.setHours(0, 0, 0, 0);
+            
+            const startTimestamp = Math.floor(startDate.getTime() / 1000);
+            const endTimestamp = Math.floor(endDate.getTime() / 1000);
+            
+            // ถ้าวันที่ยังไม่มาถึง ให้ตั้งค่าเป็น 0
+            let amount = 0;
+            if (day <= now.getDate()) {
+                const dayData = await db.get(
+                    'SELECT SUM(amount) as total FROM payments WHERE timestamp >= ? AND timestamp < ?',
+                    [startTimestamp, endTimestamp]
+                );
+                amount = dayData.total || 0;
+            }
+            
+            dailyData.push({
+                day,
+                amount
             });
         }
-
-        // ตรวจสอบจำนวนครั้งที่ใช้งาน
-        if (redeemCode.uses >= redeemCode.max_uses) {
-            return res.status(400).json({ 
-                error: 'โค้ดถูกใช้งานครบแล้ว',
-                code: code,
-                credits: redeemCode.credits,
-                maxUses: redeemCode.max_uses,
-                uses: redeemCode.uses,
-                expireTime: new Date(parseInt(redeemCode.expire_time)).toLocaleString('th-TH')
-            });
-        }
-
-        // เพิ่มเครดิตให้ผู้ใช้
-        await db.run('UPDATE users SET credits = credits + ? WHERE username = ?', 
-            [redeemCode.credits, username]);
-
-        // อัปเดตจำนวนครั้งที่ใช้งานโค้ด
-        await db.run('UPDATE redemption_codes SET uses = uses + 1 WHERE code = ?', [code]);
-
-        const updatedUser = await db.get('SELECT credits FROM users WHERE username = ?', [username]);
-
-        res.json({ 
-            message: 'แลกโค้ดสำเร็จ', 
-            code: code,
-            creditsReceived: redeemCode.credits,
-            newCredits: updatedUser.credits,
-            maxUses: redeemCode.max_uses,
-            uses: redeemCode.uses + 1,
-            expireTime: new Date(parseInt(redeemCode.expire_time)).toLocaleString('th-TH')
+        
+        // ดึงยอดรวมการเติมเงินเดือนนี้
+        const monthlyTotal = await db.get(
+            'SELECT SUM(amount) as total FROM payments WHERE timestamp >= ?',
+            [firstDayTimestamp]
+        );
+        
+        res.json({
+            dailyData,
+            monthlyTotal: monthlyTotal.total || 0
         });
     } catch (err) {
-        console.error('Error redeeming code:', err);
-        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการแลกโค้ด' });
+        console.error('Error getting monthly payment stats:', err);
+        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูลสถิติการเติมเงินรายเดือน' });
     }
 });
 
@@ -1669,6 +1661,12 @@ app.post('/payment/truemoney', async (req, res) => {
             // เพิ่มเครดิตให้ผู้ใช้
             await db.run('UPDATE users SET credits = credits + ? WHERE username = ?', [credits, username]);
             const updatedUser = await db.get('SELECT credits FROM users WHERE username = ?', [username]);
+
+            // บันทึกประวัติการเติมเงิน
+            await db.run(
+                'INSERT INTO payments (username, amount, credits, payment_method, voucher_code) VALUES (?, ?, ?, ?, ?)',
+                [username, amount, credits, 'truemoney', voucherCode]
+            );
 
             res.json({
                 success: true,
