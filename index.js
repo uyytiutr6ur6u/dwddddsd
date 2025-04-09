@@ -18,6 +18,12 @@ const app = express();
 const PORT = process.env.PORT || 3000; // Use environment port or default to 3000
 const HTTPS_PORT = 443;
 
+// ตัวแปรสำหรับเก็บการตั้งค่าระบบ
+let systemSettings = {
+  defaultCredits: 60,
+  runBotCredits: 15
+};
+
 // เชื่อมต่อกับฐานข้อมูล SQLite
 let db;
 async function initializeDatabase() {
@@ -501,6 +507,16 @@ app.post('/admin/settings/default-credits', async (req, res) => {
     }
 });
 
+// ฟังก์ชันสำหรับตั้งค่าเครดิตที่ใช้ในการรันบอท
+app.post('/admin/settings/run-bot-credits', (req, res) => {
+  const { runBotCredits } = req.body;
+  if (typeof runBotCredits !== 'number' || runBotCredits < 0) {
+    return res.status(400).json({ error: 'ค่าเครดิตไม่ถูกต้อง' });
+  }
+  systemSettings.runBotCredits = runBotCredits;
+  res.json({ success: true, runBotCredits });
+});
+
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -897,16 +913,16 @@ app.post('/start/:botId', async (req, res) => {
         }
 
         const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
-        if (user.credits < 15) {
+        if (user.credits < systemSettings.runBotCredits) {
             return res.status(403).json({ 
                 error: 'เครดิตไม่เพียงพอ',
                 currentCredits: user.credits,
-                requiredCredits: 15
+                requiredCredits: systemSettings.runBotCredits
             });
         }
 
         // ลดเครดิตผู้ใช้
-        await db.run('UPDATE users SET credits = credits - 15 WHERE username = ?', [username]);
+        await db.run('UPDATE users SET credits = credits - ? WHERE username = ?', [systemSettings.runBotCredits, username]);
         
         const expireTime = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
         bots[botId].expireTime = expireTime;
@@ -1690,6 +1706,123 @@ app.post('/payment/truemoney', async (req, res) => {
         res.status(500).json({ error: 'เกิดข้อผิดพลาดในการประมวลผลการชำระเงิน' });
     }
 });
+
+// Admin Routes
+app.get('/admin/codes', async (req, res) => {
+    try {
+        // ดึงข้อมูลโค้ดทั้งหมดจากฐานข้อมูล
+        const codes = await db.all('SELECT * FROM redemption_codes');
+        res.json(codes);
+    } catch (err) {
+        console.error('Error getting redemption codes:', err);
+        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูลโค้ด' });
+    }
+});
+
+app.post('/admin/codes/generate', async (req, res) => {
+    try {
+        const { credits, maxUses, expireHours } = req.body;
+        
+        if (!credits || credits <= 0 || !maxUses || maxUses <= 0 || !expireHours || expireHours <= 0) {
+            return res.status(400).json({ error: 'กรุณาระบุข้อมูลให้ถูกต้อง' });
+        }
+        
+        // สร้างโค้ดแบบสุ่ม
+        const code = generateRandomCode(12);
+        
+        // คำนวณเวลาหมดอายุ
+        const now = new Date();
+        const expireTime = Math.floor(now.getTime() / 1000) + (expireHours * 60 * 60);
+        
+        // บันทึกลงฐานข้อมูล
+        await db.run(
+            'INSERT INTO redemption_codes (code, credits, max_uses, uses, expire_time) VALUES (?, ?, ?, ?, ?)',
+            [code, credits, maxUses, 0, expireTime]
+        );
+        
+        res.json({ success: true, code });
+    } catch (err) {
+        console.error('Error generating code:', err);
+        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการสร้างโค้ด' });
+    }
+});
+
+app.delete('/admin/codes/:code', async (req, res) => {
+    try {
+        const code = req.params.code;
+        
+        const result = await db.run('DELETE FROM redemption_codes WHERE code = ?', [code]);
+        
+        if (result.changes === 0) {
+            return res.status(404).json({ error: 'ไม่พบโค้ด' });
+        }
+        
+        res.json({ success: true, message: 'ลบโค้ดสำเร็จ' });
+    } catch (err) {
+        console.error('Error deleting code:', err);
+        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการลบโค้ด' });
+    }
+});
+
+app.post('/redeem', async (req, res) => {
+    try {
+        const { username, code } = req.body;
+        
+        if (!username || !code) {
+            return res.status(400).json({ error: 'กรุณาระบุชื่อผู้ใช้และโค้ด' });
+        }
+        
+        const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
+        if (!user) {
+            return res.status(404).json({ error: 'ไม่พบผู้ใช้' });
+        }
+        
+        const redemptionCode = await db.get('SELECT * FROM redemption_codes WHERE code = ?', [code]);
+        if (!redemptionCode) {
+            return res.status(404).json({ error: 'โค้ดไม่ถูกต้อง' });
+        }
+        
+        // ตรวจสอบว่าโค้ดหมดอายุหรือยัง
+        const now = Math.floor(Date.now() / 1000);
+        if (redemptionCode.expire_time < now) {
+            return res.status(400).json({ error: 'โค้ดหมดอายุแล้ว' });
+        }
+        
+        // ตรวจสอบว่าโค้ดถูกใช้เกินจำนวนครั้งที่กำหนดหรือไม่
+        if (redemptionCode.uses >= redemptionCode.max_uses) {
+            return res.status(400).json({ error: 'โค้ดถูกใช้ครบตามจำนวนที่กำหนดแล้ว' });
+        }
+        
+        // เพิ่มเครดิตให้ผู้ใช้
+        await db.run('UPDATE users SET credits = credits + ? WHERE username = ?', [redemptionCode.credits, username]);
+        
+        // อัปเดตจำนวนครั้งที่ใช้โค้ด
+        await db.run('UPDATE redemption_codes SET uses = uses + 1 WHERE code = ?', [code]);
+        
+        // ดึงข้อมูลผู้ใช้ที่อัปเดตแล้ว
+        const updatedUser = await db.get('SELECT credits FROM users WHERE username = ?', [username]);
+        
+        res.json({ 
+            success: true, 
+            message: 'แลกเครดิตสำเร็จ', 
+            creditsReceived: redemptionCode.credits,
+            totalCredits: updatedUser.credits
+        });
+    } catch (err) {
+        console.error('Error redeeming code:', err);
+        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการแลกโค้ด' });
+    }
+});
+
+// ฟังก์ชันสำหรับสร้างโค้ดแบบสุ่ม
+function generateRandomCode(length) {
+    const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+}
 
 // เริ่มต้นแอปพลิเคชัน
 async function startApp() {
