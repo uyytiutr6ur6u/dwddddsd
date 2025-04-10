@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>หน้าจัดการระบบ</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -25,6 +25,15 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        html, body {
+            overflow-x: hidden;
+            -webkit-touch-callout: none;
         }
 
         body {
@@ -499,6 +508,17 @@
                     <!-- โค้ดจะถูกแสดงที่นี่ -->
                 </div>
             </div>
+            <div class="settings-card">
+                <h3><i class="fas fa-bullhorn"></i> ประกาศข้อความแจ้งเตือน</h3>
+                <div class="settings-row">
+                    <button class="btn btn-primary" onclick="createAnnouncement()">
+                        <i class="fas fa-plus"></i> สร้างข้อความใหม่
+                    </button>
+                </div>
+                <div id="announcements-list" style="margin-top: 15px;">
+                    <!-- ข้อความประกาศจะถูกแสดงที่นี่ -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -821,6 +841,8 @@
                 renderTables();
                 createCharts();
                 await loadCodes();
+                // โหลดข้อมูลประกาศด้วย
+                await loadAnnouncements();
 
                 // ปิด loading indicator และแสดงข้อความสำเร็จ
                 Swal.fire({
@@ -1878,6 +1900,185 @@
             }
         }
 
+        // ฟังก์ชันสำหรับจัดการประกาศข้อความ
+        async function createAnnouncement() {
+            try {
+                const { value: formValues } = await Swal.fire({
+                    title: 'สร้างข้อความประกาศใหม่',
+                    html: `
+                        <div style="text-align: left; margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label for="announcement-title">หัวข้อ:</label>
+                                <input type="text" id="announcement-title" class="swal2-input" placeholder="หัวข้อประกาศ">
+                            </div>
+                            <div class="form-group">
+                                <label for="announcement-message">ข้อความ:</label>
+                                <textarea id="announcement-message" class="swal2-textarea" placeholder="รายละเอียดประกาศ" style="height: 150px;"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="announcement-type">ประเภท:</label>
+                                <select id="announcement-type" class="swal2-select">
+                                    <option value="info">ข้อมูล (สีฟ้า)</option>
+                                    <option value="success">สำเร็จ (สีเขียว)</option>
+                                    <option value="warning">คำเตือน (สีเหลือง)</option>
+                                    <option value="danger">สำคัญ (สีแดง)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="announcement-expire">หมดอายุใน (ชั่วโมง):</label>
+                                <input type="number" id="announcement-expire" class="swal2-input" value="24" min="1">
+                            </div>
+                        </div>
+                    `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'สร้างประกาศ',
+                    cancelButtonText: 'ยกเลิก',
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    preConfirm: () => {
+                        const title = document.getElementById('announcement-title').value;
+                        const message = document.getElementById('announcement-message').value;
+                        const type = document.getElementById('announcement-type').value;
+                        const expireHours = parseInt(document.getElementById('announcement-expire').value);
+                        
+                        if (!title) {
+                            Swal.showValidationMessage('กรุณาระบุหัวข้อประกาศ');
+                            return false;
+                        }
+                        if (!message) {
+                            Swal.showValidationMessage('กรุณาระบุข้อความประกาศ');
+                            return false;
+                        }
+                        if (!expireHours || expireHours <= 0) {
+                            Swal.showValidationMessage('กรุณาระบุเวลาหมดอายุที่มากกว่า 0');
+                            return false;
+                        }
+                        
+                        return {
+                            title: title,
+                            message: message,
+                            type: type,
+                            expireHours: expireHours
+                        };
+                    }
+                });
+
+                if (formValues) {
+                    const response = await fetch('/admin/announcements', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formValues)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'ไม่สามารถสร้างประกาศได้');
+                    }
+
+                    await loadAnnouncements();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สร้างประกาศสำเร็จ!',
+                        text: 'ประกาศของคุณจะแสดงในหน้าหลักแล้ว',
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                }
+            } catch (error) {
+                console.error('Error creating announcement:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#ff3366'
+                });
+            }
+        }
+
+        async function loadAnnouncements() {
+            try {
+                const response = await fetch('/admin/announcements');
+                if (!response.ok) throw new Error('ไม่สามารถโหลดรายการประกาศได้');
+                const announcements = await response.json();
+                
+                const announcementsListHtml = announcements.map(announcement => {
+                    // กำหนดสีตามประเภท
+                    let typeColor = '#00d4ff'; // default info
+                    if (announcement.type === 'success') typeColor = '#00cc99';
+                    if (announcement.type === 'warning') typeColor = '#ffcc00';
+                    if (announcement.type === 'danger') typeColor = '#ff3366';
+                    
+                    return `
+                    <div class="announcement-item" style="background: var(--dark); padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid ${typeColor};">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="font-weight: bold; color: ${typeColor};">${announcement.title}</span>
+                                <p style="margin: 5px 0; color: var(--light); font-size: 0.9em;">${announcement.message}</p>
+                                <small style="color: var(--light); opacity: 0.7;">
+                                    หมดอายุ: ${new Date(parseInt(announcement.expire_time)).toLocaleString('th-TH')}
+                                </small>
+                            </div>
+                            <button class="btn btn-danger" onclick="deleteAnnouncement('${announcement.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `}).join('');
+                
+                document.getElementById('announcements-list').innerHTML = announcementsListHtml || '<p style="color: var(--text-secondary);">ยังไม่มีประกาศใด ๆ</p>';
+            } catch (error) {
+                console.error('Error loading announcements:', error);
+            }
+        }
+
+        async function deleteAnnouncement(id) {
+            const result = await Swal.fire({
+                title: 'ยืนยันการลบ',
+                text: 'คุณต้องการลบประกาศนี้ใช่หรือไม่?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ลบ',
+                cancelButtonText: 'ยกเลิก',
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#ff3366'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/announcements/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) throw new Error('ไม่สามารถลบประกาศได้');
+                    
+                    await loadAnnouncements();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ลบประกาศสำเร็จ',
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: error.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#ff3366'
+                    });
+                }
+            }
+        }
+
         // Initial load
         loadData();
         // Auto refresh every 30 seconds
@@ -1885,6 +2086,9 @@
 
         // Initialize with dashboard
         switchTab('dashboard');
+
+        // Disable right-click
+        document.addEventListener('contextmenu', event => event.preventDefault());
     </script>
 </body>
 </html>
