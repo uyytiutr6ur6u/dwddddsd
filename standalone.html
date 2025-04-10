@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0" />
+    <title>BotHostTH - บริการโฮสต์บอทคุณภาพสูง</title>
+    <meta name="description" content="บริการโฮสต์บอทคุณภาพสูงสำหรับ Discord, Line และ JavaScript" />
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons (SVG) will be inline -->
+    <style>
+      /* Base Styles */
+      :root {
+        --primary: 239, 84%, 67%;
+        --primary-light: 240, 96%, 90%;
+        --primary-dark: 240, 84%, 50%;
+        --accent: 270, 95%, 75%;
+        --background: 0, 0%, 100%;
+        --foreground: 222, 84%, 4.9%;
+        --card: 0, 0%, 100%;
+        --card-foreground: 222.2, 84%, 4.9%;
+        --border: 214.3, 31.8%, 91.4%;
+        --input: 214.3, 31.8%, 91.4%;
+        --ring: 239, 84%, 67%;
+        --radius: 0.75rem;
+        --font-size-base: 0.85rem;        /* ลดขนาดฟอนต์พื้นฐาน */
+        --font-size-small: 0.75rem;       /* ฟอนต์เล็ก */
+        --font-size-xs: 0.7rem;           /* ฟอนต์เล็กมาก */
+        --font-size-lg: 1rem;             /* ฟอนต์ใหญ่ */
+        --font-size-xl: 1.2rem;           /* ฟอนต์ใหญ่มาก */
+        --font-size-2xl: 1.5rem;          /* ฟอนต์ใหญ่มากที่สุด */
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Inter', 'IBM Plex Sans Thai', sans-serif;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        font-size: var(--font-size-base);
+      }
+
+      html, body {
+        overflow-x: hidden;
+        -webkit-touch-callout: none;
+      }
+
+      body {
+        background-color: #fff;
+        color: hsl(var(--foreground));
+        line-height: 1.6;
+        overflow-x: hidden;
+        width: 100%;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+
+      /* Animation */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+
+      .animate-fadeIn {
+        animation: fadeIn 0.8s ease-out;
+      }
+
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+
+      .animate-pulse {
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      /* Typography */
+      h1, h2, h3, h4, h5, h6 {
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      h1 {
+        font-size: var(--font-size-2xl);
+        margin-bottom: 1.5rem;
+      }
+
+      h2 {
+        font-size: var(--font-size-xl);
+        margin-bottom: 1.5rem;
+      }
+
+      h3 {
+        font-size: var(--font-size-lg);
+        margin-bottom: 1rem;
+      }
+
+      p {
+        margin-bottom: 1rem;
+        font-size: var(--font-size-base);
+      }
+
+      a {
+        color: hsl(var(--primary));
+        text-decoration: none;
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-dark)));
+        color: white;
+        box-shadow: 0 10px 15px -3px rgba(var(--primary), 0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 20px -3px rgba(var(--primary), 0.4);
+      }
+
+      .btn-outline {
+        background: transparent;
+        border: 2px solid hsl(var(--primary));
+        color: hsl(var(--primary));
+      }
+
+      .btn-outline:hover {
+        background: rgba(var(--primary), 0.1);
+      }
+
+      /* Layout */
+      .min-h-screen {
+        min-height: 100vh;
+      }
+
+      .flex {
+        display: flex;
+      }
+
+      .flex-col {
+        flex-direction: column;
+      }
+
+      .flex-wrap {
+        flex-wrap: wrap;
+      }
+
+      .justify-center {
+        justify-content: center;
+      }
+
+      .justify-between {
+        justify-content: space-between;
+      }
+
+      .items-center {
+        align-items: center;
+      }
+
+      .grid {
+        display: grid;
+      }
+
+      .gap-4 {
+        gap: 1rem;
+      }
+
+      .gap-8 {
+        gap: 2rem;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      .mx-auto {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .mb-4 {
+        margin-bottom: 1rem;
+      }
+
+      .mb-8 {
+        margin-bottom: 2rem;
+      }
+
+      .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      .py-4 {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+      }
+
+      .py-8 {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+      }
+
+      .py-16 {
+        padding-top: 4rem;
+        padding-bottom: 4rem;
+      }
+
+      .py-24 {
+        padding-top: 6rem;
+        padding-bottom: 6rem;
+      }
+
+      /* Cards */
+      .card {
+        background-color: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(var(--border), 0.7);
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-content {
+        padding: 2rem;
+      }
+
+      /* Navbar */
+      .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background-color: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(var(--border), 0.7);
+        transition: all 0.3s ease;
+      }
+
+      .navbar-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2rem;
+      }
+
+      .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        font-size: 1.5rem;
+      }
+
+      .navbar-nav {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .nav-link {
+        color: hsl(var(--foreground));
+        font-weight: 500;
+        transition: color 0.3s ease;
+      }
+
+      .nav-link:hover {
+        color: hsl(var(--primary));
+      }
+
+      .navbar-buttons {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .mobile-menu-btn {
+        display: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.5rem;
+      }
+
+      /* Hero Section */
+      .hero {
+        padding: 6rem 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-content {
+        max-width: 600px;
+      }
+
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background-color: rgba(var(--primary-light), 0.3);
+        color: hsl(var(--primary));
+        border-radius: 2rem;
+        font-weight: 500;
+        font-size: var(--font-size-small);
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(var(--primary), 0.2);
+      }
+
+      .hero-title {
+        background: linear-gradient(135deg, #4338ca, #6d28d9);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font-size: var(--font-size-2xl);
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+        font-weight: 800;
+      }
+
+      .hero-subtitle {
+        color: #6b7280;
+        font-size: var(--font-size-base);
+        margin-bottom: 2rem;
+      }
+
+      .hero-features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+
+      .feature-tag {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(var(--border), 0.7);
+      }
+
+      .hero-image {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        height: auto;
+      }
+
+      .hero-blob {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(var(--primary), 0.2), rgba(var(--accent), 0.1));
+        border-radius: 50%;
+        filter: blur(40px);
+        z-index: -1;
+      }
+
+      /* Features Section */
+      .features {
+        padding: 6rem 0;
+        background: linear-gradient(180deg, white, rgba(var(--primary-light), 0.1));
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+      }
+
+      .feature-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+        transition: transform 0.3s ease;
+        border: 1px solid rgba(var(--border), 0.7);
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .feature-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, rgba(var(--primary), 0.1), rgba(var(--accent), 0.1));
+        border-radius: 1rem;
+        margin-bottom: 1.5rem;
+        color: hsl(var(--primary));
+      }
+
+      .feature-title {
+        font-size: var(--font-size-lg);
+        margin-bottom: 1rem;
+      }
+
+      /* Testimonials Section */
+      .testimonials {
+        padding: 6rem 0;
+        background: linear-gradient(135deg, rgba(var(--primary-light), 0.2), rgba(var(--accent), 0.1));
+      }
+
+      .testimonials-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+      }
+
+      .testimonial-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 10px 15px -5px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(var(--border), 0.5);
+      }
+
+      .testimonial-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .testimonial-content {
+        font-style: italic;
+        margin-bottom: 1.5rem;
+        font-size: var(--font-size-base);
+      }
+
+      .testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .author-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .author-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        font-size: var(--font-size-base);
+      }
+
+      .author-role {
+        color: #6b7280;
+        font-size: var(--font-size-xs);
+      }
+
+      .testimonial-rating {
+        display: flex;
+        gap: 0.25rem;
+        margin-bottom: 1rem;
+      }
+
+      .star-filled {
+        color: #ffba08;
+      }
+
+      /* CTA Section */
+      .cta {
+        padding: 6rem 0;
+        background: linear-gradient(135deg, #4338ca, #6d28d9);
+        color: white;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .cta-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('https://images.unsplash.com/photo-1545987796-200677ee1011');
+        background-size: cover;
+        background-position: center;
+        opacity: 0.1;
+      }
+
+      .cta-content {
+        position: relative;
+        z-index: 1;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .cta-title {
+        font-size: var(--font-size-2xl);
+        margin-bottom: 1.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .cta-text {
+        font-size: var(--font-size-base);
+        margin-bottom: 2rem;
+        opacity: 0.9;
+      }
+
+      /* Footer */
+      .footer {
+        background: linear-gradient(180deg, #f9fafb, #f3f4f6);
+        border-top: 1px solid rgba(var(--border), 0.7);
+        padding: 4rem 0 2rem;
+      }
+
+      .footer-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+        gap: 2rem;
+      }
+
+      .footer-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        font-size: 1.5rem;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .footer-link {
+        color: #6b7280;
+        transition: color 0.3s ease;
+      }
+
+      .footer-link:hover {
+        color: hsl(var(--primary));
+      }
+
+      .footer-bottom {
+        text-align: center;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(var(--border), 0.7);
+      }
+
+      .footer-copyright {
+        color: #6b7280;
+        font-size: var(--font-size-small);
+      }
+
+      .footer-credit {
+        color: #9ca3af;
+        font-size: var(--font-size-xs);
+        margin-top: 0.5rem;
+      }
+
+      /* Blobs and decorations */
+      .blob {
+        position: absolute;
+        z-index: -1;
+        border-radius: 50%;
+        filter: blur(80px);
+      }
+
+      .blob-1 {
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(rgba(var(--primary), 0.2), rgba(var(--primary), 0.05));
+        top: -200px;
+        right: -200px;
+      }
+
+      .blob-2 {
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(rgba(var(--accent), 0.15), rgba(var(--accent), 0.05));
+        bottom: -300px;
+        left: -200px;
+      }
+
+      /* Code-like UI element for hero */
+      .code-ui {
+        background-color: #1e293b;
+        border-radius: 1rem;
+        padding: 1rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+        width: 100%;
+        max-width: 500px;
+      }
+
+      .code-header {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .code-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      .red-dot {
+        background-color: #ef4444;
+      }
+
+      .yellow-dot {
+        background-color: #f59e0b;
+      }
+
+      .green-dot {
+        background-color: #10b981;
+      }
+
+      .code-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .code-line {
+        height: 14px;
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+      }
+
+      .code-indent {
+        margin-left: 20px;
+      }
+
+      .code-highlight {
+        background-color: rgba(var(--primary), 0.3);
+      }
+
+      .code-card {
+        margin-top: 1rem;
+        background-color: rgba(255, 255, 255, 0.05);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        :root {
+          --font-size-base: 0.8rem;       /* ลดขนาดฟอนต์พื้นฐานบนมือถือ */
+          --font-size-small: 0.7rem;      /* ฟอนต์เล็กบนมือถือ */
+          --font-size-xs: 0.65rem;        /* ฟอนต์เล็กมากบนมือถือ */
+          --font-size-lg: 0.9rem;         /* ฟอนต์ใหญ่บนมือถือ */
+          --font-size-xl: 1.1rem;         /* ฟอนต์ใหญ่มากบนมือถือ */
+          --font-size-2xl: 1.3rem;        /* ฟอนต์ใหญ่มากที่สุดบนมือถือ */
+        }
+        h1 {
+          font-size: var(--font-size-2xl);
+        }
+        
+        h2 {
+          font-size: var(--font-size-xl);
+        }
+        
+        .navbar-nav, .navbar-buttons {
+          display: none;
+        }
+        
+        .mobile-menu-btn {
+          display: block;
+        }
+        
+        .features-grid, .testimonials-grid {
+          grid-template-columns: 1fr;
+        }
+        
+        .hero {
+          padding: 4rem 0;
+        }
+        
+        .footer-top {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        
+        .navbar-container {
+          padding: 1rem;
+        }
+      }
+
+      /* Mobile Menu */
+      .mobile-menu {
+        display: none;
+        position: fixed;
+        top: 70px;
+        left: 0;
+        right: 0;
+        background-color: white;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+        border-radius: 0 0 1rem 1rem;
+        z-index: 100;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      .mobile-menu.open {
+        display: block;
+      }
+
+      .mobile-menu-link {
+        display: block;
+        padding: 0.75rem 1rem;
+        color: hsl(var(--foreground));
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+      }
+
+      .mobile-menu-link:hover {
+        background-color: rgba(var(--primary), 0.1);
+        color: hsl(var(--primary));
+      }
+
+      .section-title-gradient {
+        background: linear-gradient(135deg, #4338ca, #6d28d9);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .section-subtitle {
+        color: #6b7280;
+        font-size: 1.125rem;
+        max-width: 700px;
+        margin: 0 auto 3rem;
+      }
+
+      /* Notification Styles */
+      .notification-icon {
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+
+      .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: #ff3366;
+        color: white;
+        font-size: 10px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: pulse 1.5s infinite;
+      }
+
+      /* Announcement Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 200;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-content {
+        position: relative;
+        background-color: white;
+        max-width: 500px;
+        width: 90%;
+        margin: 100px auto;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      .modal-header {
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(var(--border), 0.7);
+      }
+
+      .modal-title {
+        font-weight: 600;
+        font-size: var(--font-size-lg);
+        color: hsl(var(--foreground));
+      }
+
+      .close-button {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #6b7280;
+      }
+
+      .close-button:hover {
+        color: hsl(var(--foreground));
+      }
+
+      .modal-body {
+        padding: 20px;
+        max-height: 500px;
+        overflow-y: auto;
+      }
+
+      .announcement-item {
+        margin-bottom: 15px;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: #f9fafb;
+        border-left: 4px solid;
+        transition: transform 0.2s ease;
+      }
+
+      .announcement-item:hover {
+        transform: translateY(-2px);
+      }
+
+      .announcement-item.info {
+        border-left-color: #00d4ff;
+      }
+
+      .announcement-item.success {
+        border-left-color: #00cc99;
+      }
+
+      .announcement-item.warning {
+        border-left-color: #ffcc00;
+      }
+
+      .announcement-item.danger {
+        border-left-color: #ff3366;
+      }
+
+      .announcement-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+      
+      .announcement-title.info {
+        color: #00d4ff;
+      }
+      
+      .announcement-title.success {
+        color: #00cc99;
+      }
+      
+      .announcement-title.warning {
+        color: #ffcc00;
+      }
+      
+      .announcement-title.danger {
+        color: #ff3366;
+      }
+
+      .announcement-message {
+        font-size: var(--font-size-base);
+        color: #4b5563;
+        margin-bottom: 5px;
+      }
+
+      .announcement-date {
+        font-size: var(--font-size-xs);
+        color: #9ca3af;
+        text-align: right;
+      }
+
+      .no-announcements {
+        text-align: center;
+        padding: 20px;
+        color: #6b7280;
+      }
+    </style>
+  </head>
+  
+  <body>
+    <div class="min-h-screen flex flex-col">
+      <!-- Background Blobs -->
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      
+      <!-- Navbar -->
+      <nav class="navbar">
+        <div class="container navbar-container">
+          <a href="index.html" class="navbar-brand">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-monitor" style="color: hsl(var(--primary));">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <span>BotHost<span style="color: hsl(var(--primary));">TH</span></span>
+          </a>
+          
+          <div class="navbar-nav">
+            <a href="index.html" class="nav-link">หน้าแรก</a>
+            <a href="#about" class="nav-link">เกี่ยวกับเรา</a>
+            <!-- เพิ่มไอคอนการแจ้งเตือน -->
+            <a href="#" class="nav-link notification-icon" onclick="showAnnouncements(event)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail">
+                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+              </svg>
+              <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+            </a>
+          </div>
+          
+          <div class="navbar-buttons">
+            <a href="login.html" class="btn btn-outline">เข้าสู่ระบบ</a>
+            <a href="register.html" class="btn btn-primary">ลงทะเบียน</a>
+          </div>
+          
+          <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu">
+              <line x1="4" y1="12" x2="20" y2="12"></line>
+              <line x1="4" y1="6" x2="20" y2="6"></line>
+              <line x1="4" y1="18" x2="20" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+          <a href="index.html" class="mobile-menu-link">หน้าแรก</a>
+          <a href="#about" class="mobile-menu-link">เกี่ยวกับเรา</a>
+          <a href="login.html" class="mobile-menu-link">เข้าสู่ระบบ</a>
+          <a href="register.html" class="mobile-menu-link">ลงทะเบียน</a>
+        </div>
+      </nav>
+      
+      <!-- Hero Section -->
+      <section class="hero">
+        <div class="container">
+          <div class="flex flex-wrap items-center">
+            <div class="flex-col w-full lg:w-1/2 animate-fadeIn">
+              <div class="hero-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles" style="margin-right: 8px;">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+                  <path d="M5 3v4"></path>
+                  <path d="M19 17v4"></path>
+                  <path d="M3 5h4"></path>
+                  <path d="M17 19h4"></path>
+                </svg>
+                <span style="margin-right: 8px; display: inline-block; width: 8px; height: 8px; background-color: hsl(var(--primary)); border-radius: 50%; animation: pulse 2s infinite;"></span>
+                เปิดให้บริการแล้ววันนี้
+              </div>
+              <h1 class="hero-title">บริการโฮสต์บอทคุณภาพสูงสำหรับ Discord, Line และ JavaScript</h1>
+              <p class="hero-subtitle">ให้บอทของคุณทำงานได้ตลอด 24 ชั่วโมง ด้วยบริการโฮสต์ที่มี<strong>เสถียรภาพสูง</strong> และใช้งานง่าย</p>
+              
+              <div class="flex gap-4 mb-8 flex-wrap">
+                <a href="login.html" class="btn btn-primary">
+                  เริ่มต้นใช้งานฟรี
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" style="margin-left: 8px;">
+                    <path d="M5 12h14"></path>
+                    <path d="m12 5 7 7-7 7"></path>
+                  </svg>
+                </a>
+                <a href="#about" class="btn btn-outline">
+                  เรียนรู้เพิ่มเติม
+                </a>
+              </div>
+              
+              <div class="hero-features">
+                <div class="feature-tag">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot" style="color: hsl(var(--primary));">
+                    <path d="M12 8V4H8"></path>
+                    <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                    <path d="M2 14h2"></path>
+                    <path d="M20 14h2"></path>
+                    <path d="M15 13v2"></path>
+                    <path d="M9 13v2"></path>
+                  </svg>
+                  <span>หลากหลายภาษา</span>
+                </div>
+                <div class="feature-tag">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-server" style="color: hsl(var(--primary));">
+                    <rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect>
+                    <rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect>
+                    <line x1="6" x2="6" y1="6" y2="6"></line>
+                    <line x1="6" x2="6" y1="18" y2="18"></line>
+                  </svg>
+                  <span>อัปไทม์ 99.9%</span>
+                </div>
+                <div class="feature-tag">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield" style="color: hsl(var(--primary));">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path>
+                  </svg>
+                  <span>ปลอดภัย</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="w-full lg:w-1/2 flex justify-center mt-8 lg:mt-0 animate-fadeIn">
+              <div class="animate-float relative">
+                <!-- Code-like UI element -->
+                <div class="code-ui">
+                  <div class="code-header">
+                    <div class="code-dot red-dot"></div>
+                    <div class="code-dot yellow-dot"></div>
+                    <div class="code-dot green-dot"></div>
+                  </div>
+                  <div class="code-content">
+                    <div class="code-line" style="width: 80%;"></div>
+                    <div class="code-line code-indent" style="width: 60%;"></div>
+                    <div class="code-line code-indent code-highlight" style="width: 70%;"></div>
+                    <div class="code-line" style="width: 100%;"></div>
+                    <div class="code-line" style="width: 90%;"></div>
+                    <div class="code-line code-indent" style="width: 50%;"></div>
+                    <div class="code-line code-indent" style="width: 65%;"></div>
+                    <div class="code-line" style="width: 100%;"></div>
+                    
+                    <div class="code-card">
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div class="code-line" style="width: 40%; height: 16px;"></div>
+                        <div style="width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #4338ca, #6d28d9);"></div>
+                      </div>
+                      <div class="code-line" style="width: 100%; margin-bottom: 8px;"></div>
+                      <div class="code-line" style="width: 85%; margin-bottom: 8px;"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Decorative elements -->
+                <div style="position: absolute; top: -20px; left: -20px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(104, 117, 245, 0.3), rgba(104, 117, 245, 0.05)); border-radius: 50%; filter: blur(40px); z-index: -1;"></div>
+                <div style="position: absolute; bottom: -30px; right: -20px; width: 250px; height: 250px; background: radial-gradient(circle, rgba(167, 139, 250, 0.3), rgba(167, 139, 250, 0.05)); border-radius: 50%; filter: blur(40px); z-index: -1;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Features Section -->
+      <section class="features" id="features">
+        <div class="container">
+          <div class="text-center mb-12">
+            <div style="display: inline-flex; align-items: center; padding: 6px 12px; background: linear-gradient(to right, rgba(var(--primary), 0.1), rgba(var(--accent), 0.1)); border-radius: 20px; margin-bottom: 12px; border: 1px solid rgba(var(--primary), 0.2);">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles" style="color: hsl(var(--primary)); margin-right: 8px;">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+                <path d="M5 3v4"></path>
+                <path d="M19 17v4"></path>
+                <path d="M3 5h4"></path>
+                <path d="M17 19h4"></path>
+              </svg>
+              คุณสมบัติเด่น
+            </div>
+            <h2 class="section-title-gradient">ทำไมควรใช้บริการ BotHostTH</h2>
+            <p class="section-subtitle">เราให้บริการโฮสต์บอทที่มีประสิทธิภาพสูง เพื่อให้บอทของคุณทำงานได้อย่างเต็มที่ตลอดเวลา</p>
+          </div>
+          
+          <div class="features-grid">
+            <!-- Feature 1 -->
+            <div class="feature-card animate-fadeIn" style="animation-delay: 0.1s;">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <h3 class="feature-title">อัปไทม์ 99.9%</h3>
+              <p>บอทของคุณทำงานตลอดเวลาด้วยระบบเซิร์ฟเวอร์ที่มีความเสถียรสูง ไม่มีสะดุดหรือล่ม</p>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="feature-card animate-fadeIn" style="animation-delay: 0.2s;">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code">
+                  <polyline points="16 18 22 12 16 6"></polyline>
+                  <polyline points="8 6 2 12 8 18"></polyline>
+                </svg>
+              </div>
+              <h3 class="feature-title">รองรับหลายภาษา</h3>
+              <p>สนับสนุน Node.js, Python, และอื่นๆ สำหรับบอท Discord, Line และแพลตฟอร์มอื่นๆ</p>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="feature-card animate-fadeIn" style="animation-delay: 0.3s;">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path>
+                </svg>
+              </div>
+              <h3 class="feature-title">ปลอดภัย</h3>
+              <p>ข้อมูลของคุณปลอดภัยด้วยระบบป้องกัน DDoS และการเข้ารหัส SSL ตลอดเวลา</p>
+            </div>
+            
+            <!-- Feature 4 -->
+            <div class="feature-card animate-fadeIn" style="animation-delay: 0.4s;">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart">
+                  <line x1="12" x2="12" y1="20" y2="10"></line>
+                  <line x1="18" x2="18" y1="20" y2="4"></line>
+                  <line x1="6" x2="6" y1="20" y2="16"></line>
+                </svg>
+              </div>
+              <h3 class="feature-title">การติดตามประสิทธิภาพ</h3>
+              <p>ตรวจสอบการใช้งานทรัพยากรและประสิทธิภาพของบอทได้ตลอดเวลาผ่านแดชบอร์ด</p>
+            </div>
+            
+            <!-- Feature 5 -->
+            <div class="feature-card animate-fadeIn" style="animation-delay: 0.5s;">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cpu">
+                  <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                  <rect x="9" y="9" width="6" height="6"></rect>
+                  <path d="M15 2v2"></path>
+                  <path d="M15 20v2"></path>
+                  <path d="M2 15h2"></path>
+                  <path d="M2 9h2"></path>
+                  <path d="M20 15h2"></path>
+                  <path d="M20 9h2"></path>
+                  <path d="M9 2v2"></path>
+                  <path d="M9 20v2"></path>
+                </svg>
+              </div>
+              <h3 class="feature-title">ทรัพยากรเพียงพอ</h3>
+              <p>RAM และ CPU ที่เพียงพอสำหรับการทำงานของบอทที่มีความซับซ้อน ไม่สะดุด</p>
+            </div>
+            
+            <!-- Feature 6 -->
+            <div class="feature-card animate-fadeIn" style="animation-delay: 0.6s;">
+              <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot">
+                  <path d="M12 8V4H8"></path>
+                  <rect width="16" height="12" x="4" y="8" rx="2"></rect>
+                  <path d="M2 14h2"></path>
+                  <path d="M20 14h2"></path>
+                  <path d="M15 13v2"></path>
+                  <path d="M9 13v2"></path>
+                </svg>
+              </div>
+              <h3 class="feature-title">รองรับหลายแพลตฟอร์ม</h3>
+              <p>ไม่ว่าจะเป็น Discord, Line, Telegram หรือแพลตฟอร์มอื่นๆ เราสนับสนุนทั้งหมด</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Testimonials Section -->
+      <section class="testimonials" id="testimonials">
+        <div class="container">
+          <div class="text-center mb-12">
+            <h2 class="section-title-gradient">ลูกค้าของเราพูดถึงเราอย่างไร</h2>
+            <p class="section-subtitle">เสียงจากผู้ใช้งานจริงที่ไว้วางใจเลือกใช้บริการ BotHostTH</p>
+          </div>
+          
+          <div class="testimonials-grid">
+            <!-- Testimonial 1 -->
+            <div class="testimonial-card animate-fadeIn" style="animation-delay: 0.1s;">
+              <div style="position: absolute; top: 20px; right: 20px; opacity: 0.1;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-quote">
+                  <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
+                  <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path>
+                </svg>
+              </div>
+              
+              <div class="testimonial-rating">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              
+              <p class="testimonial-content">"บริการโฮสต์บอทที่ดีที่สุดที่เคยใช้มา เสถียรมาก ไม่มีปัญหาล่มเลย ราคาก็สบายกระเป๋า แนะนำเลยครับ"</p>
+              
+              <div class="testimonial-author">
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=100&q=80" alt="อภิชัย นักพัฒนา" class="author-avatar">
+                <div>
+                  <div class="author-name">อภิชัย นักพัฒนา</div>
+                  <div class="author-role">นักพัฒนาบอท Discord</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Testimonial 2 -->
+            <div class="testimonial-card animate-fadeIn" style="animation-delay: 0.2s;">
+              <div style="position: absolute; top: 20px; right: 20px; opacity: 0.1;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-quote">
+                  <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
+                  <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path>
+                </svg>
+              </div>
+              
+              <div class="testimonial-rating">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              
+              <p class="testimonial-content">"แต่ก่อนต้องคอยเปิดคอมไว้ตลอดเพื่อรันบอทของร้าน พอมาใช้ BotHostTH ปัญหาหมดไป ลูกค้าได้รับการตอบกลับตลอด 24 ชั่วโมง"</p>
+              
+              <div class="testimonial-author">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=100&q=80" alt="สมชาย ร้านค้าออนไลน์" class="author-avatar">
+                <div>
+                  <div class="author-name">สมชาย ร้านค้าออนไลน์</div>
+                  <div class="author-role">ผู้ประกอบการ</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Testimonial 3 -->
+            <div class="testimonial-card animate-fadeIn" style="animation-delay: 0.3s;">
+              <div style="position: absolute; top: 20px; right: 20px; opacity: 0.1;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-quote">
+                  <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
+                  <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"></path>
+                </svg>
+              </div>
+              
+              <div class="testimonial-rating">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="star-filled">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #e2e8f0;">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              
+              <p class="testimonial-content">"ใช้งานง่ายมาก แม้แต่มือใหม่อย่างฉันยังตั้งค่าบอทได้ภายใน 5 นาที ทีมงานช่วยเหลือดีมาก"</p>
+              
+              <div class="testimonial-author">
+                <img src="https://images.unsplash.com/photo-1619895862022-09114b41f16f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjJ8fHByb2ZpbGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=100&q=80" alt="วิภา นักศึกษา" class="author-avatar">
+                <div>
+                  <div class="author-name">วิภา นักศึกษา</div>
+                  <div class="author-role">นักเรียนมหาวิทยาลัย</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- About Section -->
+      <section class="py-16 bg-white" id="about">
+        <div class="container">
+          <div class="max-w-3xl mx-auto">
+            <div class="text-center mb-12">
+              <h2 class="section-title-gradient">เกี่ยวกับ BotHostTH</h2>
+              <p class="section-subtitle">บริการโฮสต์บอทคุณภาพสูงสำหรับ Discord, Line และ JavaScript ด้วยราคาที่เหมาะสมสำหรับคนไทย</p>
+            </div>
+            
+            <div class="space-y-8">
+              <div>
+                <h3 class="text-xl font-bold mb-3">เราคือใคร</h3>
+                <p>BotHostTH ก่อตั้งขึ้นในปี 2023 โดยทีมนักพัฒนาชาวไทยที่มีความเชี่ยวชาญในการพัฒนาและโฮสต์บอท เรามีเป้าหมายที่จะให้บริการโฮสต์บอทที่มีคุณภาพสูงในราคาที่เหมาะสมสำหรับคนไทย</p>
+                <p class="mt-3">ด้วยประสบการณ์กว่า 5 ปีในวงการ เราเข้าใจความต้องการของนักพัฒนาบอทอย่างแท้จริง และได้ออกแบบบริการที่ตอบโจทย์การใช้งานจริง ไม่ว่าจะเป็นบอทสำหรับเซิร์ฟเวอร์ Discord หรือแชทบอทสำหรับ Line</p>
+              </div>
+              
+              <div>
+                <h3 class="text-xl font-bold mb-3">ทำไมต้องเลือก BotHostTH</h3>
+                
+                <div class="space-y-4 mt-6">
+                  <div class="flex gap-4">
+                    <div class="flex-shrink-0 mt-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: hsl(var(--primary));">
+                        <rect width="20" height="8" x="2" y="2" rx="2" ry="2"></rect>
+                        <rect width="20" height="8" x="2" y="14" rx="2" ry="2"></rect>
+                        <line x1="6" x2="6" y1="6" y2="6"></line>
+                        <line x1="6" x2="6" y1="18" y2="18"></line>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-lg font-semibold mb-1">เซิร์ฟเวอร์คุณภาพสูง</h4>
+                      <p class="text-gray-700">
+                        เราใช้เซิร์ฟเวอร์ที่มีประสิทธิภาพสูงและตั้งอยู่ในประเทศไทย ทำให้การเชื่อมต่อรวดเร็วและเสถียร เหมาะสำหรับการใช้งานกับแพลตฟอร์มยอดนิยมในประเทศไทย
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div class="flex gap-4">
+                    <div class="flex-shrink-0 mt-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: hsl(var(--primary));">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-lg font-semibold mb-1">ความปลอดภัยสูง</h4>
+                      <p class="text-gray-700">
+                        เราให้ความสำคัญกับความปลอดภัยของข้อมูลลูกค้าเป็นอันดับหนึ่ง ด้วยระบบป้องกัน DDoS และการเข้ารหัส SSL ทำให้มั่นใจได้ว่าข้อมูลของคุณจะปลอดภัย
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div class="flex gap-4">
+                    <div class="flex-shrink-0 mt-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: hsl(var(--primary));">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-lg font-semibold mb-1">อัปไทม์สูงถึง 99.9%</h4>
+                      <p class="text-gray-700">
+                        เรารับประกันอัปไทม์สูงถึง 99.9% ทำให้บอทของคุณทำงานได้ตลอด 24 ชั่วโมง ไม่พลาดการใช้งานสำคัญ
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div class="flex gap-4">
+                    <div class="flex-shrink-0 mt-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: hsl(var(--primary));">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-lg font-semibold mb-1">ใช้งานง่าย</h4>
+                      <p class="text-gray-700">
+                        แดชบอร์ดที่ใช้งานง่าย ไม่ซับซ้อน ทำให้คุณสามารถจัดการบอทได้อย่างสะดวก แม้ไม่มีความรู้ด้านเทคนิคมากนัก
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- CTA Section -->
+      <section class="cta">
+        <div class="cta-overlay"></div>
+        <div class="container">
+          <div class="cta-content">
+            <h2 class="cta-title">พร้อมเริ่มต้นใช้งานกับ BotHostTH แล้วหรือยัง?</h2>
+            <p class="cta-text">ลงทะเบียนฟรีวันนี้และให้บอทของคุณทำงานได้ตลอด 24 ชั่วโมง</p>
+            <div class="flex flex-wrap gap-4 justify-center">
+              <a href="login.html" class="btn btn-primary" style="background-color: white; color: #4338ca;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                เริ่มต้นใช้งานฟรี
+              </a>
+              <a href="#about" class="btn btn-outline" style="border-color: white; color: white;">
+                เรียนรู้เพิ่มเติม
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 8px;">
+                  <path d="M5 12h14"></path>
+                  <path d="m12 5 7 7-7 7"></path>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="container">
+          <div class="footer-top">
+            <a href="#" class="footer-brand">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-monitor" style="color: hsl(var(--primary));">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              <span>BotHost<span style="color: hsl(var(--primary));">TH</span></span>
+            </a>
+            
+            <div class="footer-links">
+              <a href="index.html" class="footer-link">หน้าแรก</a>
+              <a href="#about" class="footer-link">เกี่ยวกับเรา</a>
+              <a href="login.html" class="footer-link">เข้าสู่ระบบ</a>
+              <a href="register.html" class="footer-link">ลงทะเบียน</a>
+            </div>
+          </div>
+          
+          <div class="footer-bottom">
+            <div class="footer-copyright">
+              © <span id="currentYear">2023</span> BotHostTH. บริการโฮสต์บอท JavaScript ราคาประหยัด
+            </div>
+            <div class="footer-credit">
+              จัดทำด้วย ❤️ เพื่อทุกคนในชุมชนนักพัฒนา
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <!-- Announcement Modal -->
+    <div id="announcementModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail" style="margin-right: 10px;">
+              <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+            </svg>
+            ข้อความประกาศ
+          </h3>
+          <button class="close-button" onclick="closeAnnouncementModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="announcementContainer">
+          <!-- ข้อความประกาศจะถูกแสดงที่นี่ -->
+          <div class="no-announcements">ไม่มีข้อความประกาศในขณะนี้</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- JavaScript to toggle mobile menu -->
+    <script>
+      // Update current year
+      document.getElementById("currentYear").textContent = new Date().getFullYear();
+      
+      // Mobile menu toggle
+      function toggleMobileMenu() {
+        const mobileMenu = document.getElementById("mobileMenu");
+        mobileMenu.classList.toggle("open");
+      }
+      
+      // Close mobile menu when clicking outside
+      document.addEventListener("click", function(event) {
+        const mobileMenu = document.getElementById("mobileMenu");
+        const mobileMenuBtn = document.querySelector(".mobile-menu-btn");
+        
+        if (!mobileMenuBtn.contains(event.target) && !mobileMenu.contains(event.target)) {
+          mobileMenu.classList.remove("open");
+        }
+      });
+      
+      // Smooth scrolling for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          
+          const targetId = this.getAttribute('href');
+          if (targetId === "#") return;
+          
+          const targetElement = document.querySelector(targetId);
+          if (targetElement) {
+            targetElement.scrollIntoView({
+              behavior: 'smooth'
+            });
+            
+            // Close mobile menu after clicking a link
+            document.getElementById("mobileMenu").classList.remove("open");
+          }
+        });
+      });
+      
+      // Add scroll animations
+      window.addEventListener('scroll', function() {
+        const animateElements = document.querySelectorAll('.animate-fadeIn');
+        
+        animateElements.forEach(el => {
+          const elementTop = el.getBoundingClientRect().top;
+          const elementVisible = 150;
+          
+          if (elementTop < window.innerHeight - elementVisible) {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+          }
+        });
+      });
+      
+      // ฟังก์ชันสำหรับการจัดการประกาศ
+      let announcements = [];
+      
+      // โหลดประกาศเมื่อหน้าเว็บโหลดเสร็จ
+      document.addEventListener("DOMContentLoaded", function() {
+        console.log("🔍 เริ่มตรวจสอบการเข้าสู่ระบบ...");
+        // ตรวจสอบการเข้าสู่ระบบเมื่อโหลดหน้า
+        const username = localStorage.getItem('username');
+        console.log("👤 ข้อมูลผู้ใช้ที่พบ:", username ? username : "ไม่พบข้อมูลผู้ใช้");
+        
+        if (username) {
+          alert('ยินดีต้อนรับ: ' + username); // เพิ่มการแจ้งเตือนเพื่อยืนยันการเข้าสู่ระบบ
+          console.log("✅ พบข้อมูลผู้ใช้: กำลังปรับปรุง UI สำหรับผู้ใช้ที่เข้าสู่ระบบ");
+          
+          // แสดงส่วนสำหรับผู้ใช้ที่ล็อกอินแล้ว
+          document.querySelectorAll('.navbar-buttons').forEach(el => {
+            el.innerHTML = `
+              <span style="margin-right: 10px; display: flex; align-items: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user" style="margin-right: 5px;">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                สวัสดี, ${username}
+              </span>
+              <a href="#" class="btn btn-outline" onclick="logout()">ออกจากระบบ</a>
+            `;
+          });
+          
+          // เพิ่มลิงก์จัดการบอทในเมนูมือถือ
+          const mobileMenu = document.getElementById('mobileMenu');
+          if (mobileMenu) {
+            // ตรวจสอบว่ามีลิงก์จัดการบอทอยู่แล้วหรือไม่
+            if (!mobileMenu.querySelector('a[href="manage.html"]')) {
+              console.log("➕ กำลังเพิ่มเมนูจัดการบอทในเมนูมือถือ");
+              const loginLink = mobileMenu.querySelector('a[href="login.html"]');
+              const registerLink = mobileMenu.querySelector('a[href="register.html"]');
+              
+              if (loginLink) mobileMenu.removeChild(loginLink);
+              if (registerLink) mobileMenu.removeChild(registerLink);
+              
+              const manageLink = document.createElement('a');
+              manageLink.href = "manage.html";
+              manageLink.className = "mobile-menu-link";
+              manageLink.textContent = "จัดการบอท";
+              
+              const logoutLink = document.createElement('a');
+              logoutLink.href = "#";
+              logoutLink.className = "mobile-menu-link";
+              logoutLink.textContent = "ออกจากระบบ";
+              logoutLink.onclick = logout;
+              
+              mobileMenu.appendChild(manageLink);
+              mobileMenu.appendChild(logoutLink);
+            }
+          }
+          
+          // เพิ่มลิงก์จัดการบอทในเมนูเดสก์ท็อป
+          const navbarNav = document.querySelector('.navbar-nav');
+          if (navbarNav && !navbarNav.querySelector('a[href="manage.html"]')) {
+            console.log("➕ กำลังเพิ่มเมนูจัดการบอทในเมนูเดสก์ท็อป");
+            const manageLink = document.createElement('a');
+            manageLink.href = "manage.html";
+            manageLink.className = "nav-link";
+            manageLink.textContent = "จัดการบอท";
+            
+            // แทรกก่อนไอคอนการแจ้งเตือน
+            const notificationIcon = navbarNav.querySelector('.notification-icon');
+            if (notificationIcon) {
+              navbarNav.insertBefore(manageLink, notificationIcon);
+            } else {
+              navbarNav.appendChild(manageLink);
+            }
+          }
+        } else {
+          console.log("❌ ไม่พบข้อมูลผู้ใช้: แสดง UI สำหรับผู้ใช้ที่ยังไม่เข้าสู่ระบบ");
+        }
+        
+        // โหลดประกาศ
+        loadAnnouncements();
+      });
+      
+      // ฟังก์ชันออกจากระบบ
+      function logout() {
+        console.log("🔓 กำลังออกจากระบบ...");
+        localStorage.removeItem('username');
+        alert('ออกจากระบบสำเร็จ');
+        window.location.href = 'login.html';
+      }
+      
+      // ฟังก์ชันโหลดประกาศจาก API
+      async function loadAnnouncements() {
+        try {
+          const response = await fetch('/announcements');
+          if (!response.ok) throw new Error('ไม่สามารถโหลดข้อความประกาศได้');
+          
+          announcements = await response.json();
+          updateNotificationBadge();
+          
+        } catch (error) {
+          console.error('Error loading announcements:', error);
+        }
+      }
+      
+      // ฟังก์ชันอัพเดทแสดงจำนวนประกาศที่มี
+      function updateNotificationBadge() {
+        const badge = document.getElementById('notificationBadge');
+        
+        if (announcements.length > 0) {
+          badge.textContent = announcements.length;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+      
+      // ฟังก์ชันแสดงโมดอลข้อความประกาศ
+      function showAnnouncements(event) {
+        event.preventDefault();
+        
+        const modal = document.getElementById('announcementModal');
+        const container = document.getElementById('announcementContainer');
+        
+        if (announcements.length > 0) {
+          let announcementsHTML = '';
+          
+          announcements.forEach(announcement => {
+            const date = new Date(parseInt(announcement.expire_time));
+            const formattedDate = date.toLocaleDateString('th-TH', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            
+            announcementsHTML += `
+              <div class="announcement-item ${announcement.type}">
+                <h4 class="announcement-title ${announcement.type}">${announcement.title}</h4>
+                <p class="announcement-message">${announcement.message}</p>
+                <div class="announcement-date">หมดอายุ: ${formattedDate}</div>
+              </div>
+            `;
+          });
+          
+          container.innerHTML = announcementsHTML;
+        } else {
+          container.innerHTML = '<div class="no-announcements">ไม่มีข้อความประกาศในขณะนี้</div>';
+        }
+        
+        modal.style.display = 'block';
+      }
+      
+      // ฟังก์ชันปิดโมดอลประกาศ
+      function closeAnnouncementModal() {
+        document.getElementById('announcementModal').style.display = 'none';
+      }
+      
+      // ปิดโมดอลเมื่อคลิกที่พื้นหลัง
+      window.addEventListener('click', function(event) {
+        const modal = document.getElementById('announcementModal');
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+      
+      // Initial call to animate elements that are already in the viewport
+      window.dispatchEvent(new Event('scroll'));
+    </script>
+  </body>
+</html>
