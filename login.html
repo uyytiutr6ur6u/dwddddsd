@@ -1,17 +1,26 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" unselectable="on" class="unselectable">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="HandheldFriendly" content="true" />
   <title>เข้าสู่ระบบ - BotHostTH</title>
+  <!-- เพิ่ม Toastify CSS -->
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    html {
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+      touch-action: pan-y;
+      -ms-touch-action: manipulation;
+      touch-action: none;
     }
     
     body {
@@ -20,6 +29,54 @@
       color: #1a202c;
       display: flex;
       flex-direction: column;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    
+    /* ทำให้ทุกองค์ประกอบไม่สามารถเลือกได้ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      -webkit-user-select: none !important;
+      -khtml-user-select: none !important;
+      -moz-user-select: none !important;
+      -ms-user-select: none !important;
+      user-select: none !important;
+      -webkit-touch-callout: none !important;
+    }
+    
+    /* ทำให้ลิงก์และปุ่มไม่สามารถลากได้ */
+    a, button, svg, img {
+      -webkit-user-drag: none;
+      -khtml-user-drag: none;
+      -moz-user-drag: none;
+      -o-user-drag: none;
+      user-drag: none;
+      -webkit-touch-callout: none;
+    }
+    
+    /* สำหรับ Firefox */
+    :not(input):not(textarea)::selection {
+      background: transparent;
+    }
+    
+    :not(input):not(textarea)::-moz-selection {
+      background: transparent;
+    }
+
+    /* ยกเว้นช่อง input ให้สามารถเลือกและแก้ไขข้อความได้ */
+    input, textarea {
+      -webkit-user-select: text;
+      -khtml-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
     }
     
     /* Navbar */
@@ -277,6 +334,10 @@
       font-size: 1rem;
       outline: none;
       transition: border-color 0.2s;
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
     }
     
     .input:focus {
@@ -353,9 +414,18 @@
         display: none;
       }
     }
+    
+    /* ป้องกันการลากและวาง */
+    [draggable="false"] {
+      -webkit-user-drag: none;
+      -khtml-user-drag: none;
+      -moz-user-drag: none;
+      -o-user-drag: none;
+      user-drag: none;
+    }
   </style>
 </head>
-<body>
+<body oncontextmenu="return false" onselectstart="return false" ondragstart="return false" onkeydown="return disableSelectCopy(event)" oncopy="return false" oncut="return false" onpaste="return checkPaste(event)" onscroll="preventZoom(event)">
   <nav>
     <div class="container nav-container">
       <a href="/" class="logo-link">
@@ -493,6 +563,8 @@
     </div>
   </div>
 
+  <!-- เพิ่ม Toastify JS -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script>
     // Set current year in footer
     document.getElementById('currentYear').textContent = new Date().getFullYear();
@@ -525,6 +597,27 @@
       }
     });
     
+    // สร้างฟังก์ชันสำหรับแสดงการแจ้งเตือนแบบสวยงาม
+    function showToast(message, isSuccess = true) {
+      Toastify({
+        text: message,
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        stopOnFocus: true,
+        className: "toast-notification",
+        style: {
+          background: isSuccess ? "linear-gradient(to right, #00b09b, #96c93d)" : "linear-gradient(to right, #ff5f6d, #ffc371)",
+          borderRadius: "8px",
+          fontWeight: "500",
+          boxShadow: "0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)",
+          paddingLeft: "15px",
+          paddingRight: "15px"
+        },
+        onClick: function(){}
+      }).showToast();
+    }
+    
     // Handle form submission
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -551,13 +644,16 @@
       .then(data => {
         if (data.success) {
           localStorage.setItem('username', data.username);
-          window.location.href = '/';
+          showToast(`ยินดีต้อนรับกลับ, ${data.username}! กำลังนำคุณไปยังแดชบอร์ด...`, true);
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1500);
         } else {
-          alert(data.error || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+          showToast(data.error || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองอีกครั้ง', false);
         }
       })
       .catch(err => {
-        alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+        showToast('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองอีกครั้งในภายหลัง', false);
       })
       .finally(() => {
         loginBtn.disabled = false;
@@ -571,6 +667,191 @@
         `;
       });
     });
+
+    // ฟังก์ชันป้องกันการกดปุ่มคัดลอก/วาง
+    function disableSelectCopy(e) {
+      // ถ้าอยู่ในช่อง input ให้ทำงานตามปกติ
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return true;
+      }
+      
+      // ป้องกันการกดปุ่ม F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+C, Ctrl+X
+      if (
+        e.keyCode === 123 || // F12
+        (e.ctrlKey && e.shiftKey && e.keyCode === 73) || // Ctrl+Shift+I
+        (e.ctrlKey && e.shiftKey && e.keyCode === 74) || // Ctrl+Shift+J
+        (e.ctrlKey && e.keyCode === 85) || // Ctrl+U
+        (e.ctrlKey && e.keyCode === 67) || // Ctrl+C
+        (e.ctrlKey && e.keyCode === 88) || // Ctrl+X
+        (e.metaKey && e.keyCode === 67) || // Cmd+C (Mac)
+        (e.metaKey && e.keyCode === 88)    // Cmd+X (Mac)
+      ) {
+        showToast('ฟังก์ชันนี้ถูกปิดใช้งานเพื่อความปลอดภัย', false);
+        e.preventDefault();
+        return false;
+      }
+      return true;
+    }
+    
+    // ตรวจสอบการวาง ให้วางได้เฉพาะในช่อง input
+    function checkPaste(e) {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return true;
+      }
+      e.preventDefault();
+      return false;
+    }
+
+    // ป้องกันการกดปุ่มขวา
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      showToast('ฟังก์ชันนี้ถูกปิดใช้งานเพื่อความปลอดภัย', false);
+      return false;
+    });
+    
+    // ป้องกันการคัดลอก
+    document.addEventListener('copy', function(e) {
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        showToast('ไม่อนุญาตให้คัดลอกข้อความ', false);
+        return false;
+      }
+    });
+    
+    // ป้องกันการตัด
+    document.addEventListener('cut', function(e) {
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        showToast('ไม่อนุญาตให้ตัดข้อความ', false);
+        return false;
+      }
+    });
+    
+    // ป้องกันการวางจากคลิปบอร์ด
+    document.addEventListener('paste', function(e) {
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        showToast('ไม่อนุญาตให้วางข้อความ', false);
+        return false;
+      }
+    });
+    
+    // ป้องกันการลากวาง
+    document.addEventListener('dragstart', function(e) {
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        return false;
+      }
+    });
+    
+    // ป้องกันการเลือกข้อความ
+    document.addEventListener('selectstart', function(e) {
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        return false;
+      }
+    });
+    
+    // ทำให้รูปภาพไม่สามารถคัดลอก
+    document.addEventListener('DOMContentLoaded', function() {
+      const images = document.getElementsByTagName('img');
+      for (let i = 0; i < images.length; i++) {
+        images[i].setAttribute('draggable', 'false');
+        images[i].style.pointerEvents = 'none';
+        images[i].oncontextmenu = function() { return false; };
+      }
+      
+      // เพิ่ม CSS สำหรับป้องกันการเลือกข้อความ
+      document.body.style.webkitUserSelect = 'none';
+      document.body.style.mozUserSelect = 'none';
+      document.body.style.msUserSelect = 'none';
+      document.body.style.userSelect = 'none';
+    });
+    
+    // ป้องกัน DevTools
+    setInterval(function() {
+      function detectDevTools() {
+        const widthThreshold = window.outerWidth - window.innerWidth > 160;
+        const heightThreshold = window.outerHeight - window.innerHeight > 160;
+        if (widthThreshold || heightThreshold) {
+          document.body.innerHTML = '<h1 style="text-align:center;margin-top:50px">การเข้าถึงถูกปฏิเสธ</h1>';
+        }
+      }
+      detectDevTools();
+      debugger;
+    }, 1000);
+
+    // เพิ่มการป้องกันการซูม
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length > 1) {
+        // ป้องกันการซูมด้วย pinch gesture
+        e.preventDefault();
+      }
+    }, { passive: false });
+    
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(e) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        // ป้องกันการซูมด้วย double tap
+        e.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+    
+    // ป้องกันการซูมด้วยปุ่ม +/- และ Ctrl+Scroll
+    function preventZoom(e) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        showToast('ไม่อนุญาตให้ซูมหน้านี้', false);
+      }
+    }
+    
+    document.addEventListener('wheel', function(e) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        showToast('ไม่อนุญาตให้ซูมหน้านี้', false);
+      }
+    }, { passive: false });
+    
+    document.addEventListener('keydown', function(e) {
+      // ป้องกันการซูมด้วย Ctrl+Plus, Ctrl+Minus
+      if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '_' || e.keyCode === 107 || e.keyCode === 109 || e.keyCode === 187 || e.keyCode === 189)) {
+        e.preventDefault();
+        showToast('ไม่อนุญาตให้ซูมหน้านี้', false);
+        return false;
+      }
+    }, { passive: false });
+    
+    // ตั้งค่าเพื่อให้แน่ใจว่าไม่มีการซูมเมื่อโหลดหน้า
+    window.onload = function() {
+      // บังคับให้ scale เป็น 1.0 เสมอ
+      if (typeof document.documentElement.requestFullscreen !== 'undefined') {
+        document.addEventListener('fullscreenchange', resetZoom);
+        document.addEventListener('webkitfullscreenchange', resetZoom);
+        document.addEventListener('mozfullscreenchange', resetZoom);
+        document.addEventListener('MSFullscreenChange', resetZoom);
+      }
+      
+      // รีเซ็ต zoom ทุกครั้งที่หน้าถูกโหลด
+      resetZoom();
+      
+      // ตรวจสอบและรีเซ็ต zoom ทุก 1 วินาที
+      setInterval(resetZoom, 1000);
+    };
+    
+    function resetZoom() {
+      // รีเซ็ต zoom กลับเป็น 100%
+      document.body.style.zoom = 1.0;
+      document.body.style.transform = 'scale(1.0)';
+      document.body.style.transformOrigin = '0 0';
+      
+      // รีเซ็ต viewport
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      }
+    }
   </script>
 </body>
 </html>
