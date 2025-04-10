@@ -1824,9 +1824,118 @@ function generateRandomCode(length) {
     return result;
 }
 
+// ประกาศเพิ่มเติมสำหรับระบบประกาศ
+app.get('/announcements', (req, res) => {
+    try {
+        // อ่านไฟล์ announcements.json
+        const announcementsData = fs.readFileSync('./announcements.json', 'utf8');
+        const announcements = JSON.parse(announcementsData);
+        
+        // กรองเฉพาะประกาศที่ยังไม่หมดอายุ
+        const now = Date.now();
+        const activeAnnouncements = announcements.filter(announcement => 
+            announcement.expire_time > now
+        );
+        
+        res.json(activeAnnouncements);
+    } catch (err) {
+        console.error('Error loading announcements:', err);
+        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการโหลดประกาศ' });
+    }
+});
+
+app.get('/admin/announcements', (req, res) => {
+    try {
+        // อ่านไฟล์ announcements.json
+        const announcementsData = fs.readFileSync('./announcements.json', 'utf8');
+        const announcements = JSON.parse(announcementsData);
+        
+        res.json(announcements);
+    } catch (err) {
+        console.error('Error loading announcements:', err);
+        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการโหลดประกาศ' });
+    }
+});
+
+app.post('/admin/announcements', (req, res) => {
+    try {
+        const { title, message, type, expireHours } = req.body;
+        
+        // ตรวจสอบข้อมูลที่จำเป็น
+        if (!title || !message || !type || !expireHours) {
+            return res.status(400).json({ error: 'กรุณาระบุข้อมูลประกาศให้ครบถ้วน' });
+        }
+        
+        // อ่านไฟล์ announcements.json
+        const announcementsData = fs.readFileSync('./announcements.json', 'utf8');
+        const announcements = JSON.parse(announcementsData);
+        
+        // สร้างประกาศใหม่
+        const newAnnouncement = {
+            id: crypto.randomBytes(8).toString('hex'),
+            title,
+            message,
+            type,
+            create_time: Date.now(),
+            expire_time: Date.now() + (expireHours * 60 * 60 * 1000)
+        };
+        
+        // เพิ่มประกาศใหม่
+        announcements.push(newAnnouncement);
+        
+        // เขียนกลับไปที่ไฟล์
+        fs.writeFileSync('./announcements.json', JSON.stringify(announcements, null, 2), 'utf8');
+        
+        res.json(newAnnouncement);
+    } catch (err) {
+        console.error('Error creating announcement:', err);
+        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการสร้างประกาศ' });
+    }
+});
+
+app.delete('/admin/announcements/:id', (req, res) => {
+    try {
+        const announcementId = req.params.id;
+        
+        // อ่านไฟล์ announcements.json
+        const announcementsData = fs.readFileSync('./announcements.json', 'utf8');
+        let announcements = JSON.parse(announcementsData);
+        
+        // ตรวจสอบว่ามีประกาศนี้หรือไม่
+        const index = announcements.findIndex(a => a.id === announcementId);
+        if (index === -1) {
+            return res.status(404).json({ error: 'ไม่พบประกาศที่ต้องการลบ' });
+        }
+        
+        // ลบประกาศ
+        announcements.splice(index, 1);
+        
+        // เขียนกลับไปที่ไฟล์
+        fs.writeFileSync('./announcements.json', JSON.stringify(announcements, null, 2), 'utf8');
+        
+        res.json({ success: true, message: 'ลบประกาศสำเร็จ' });
+    } catch (err) {
+        console.error('Error deleting announcement:', err);
+        res.status(500).json({ error: 'เกิดข้อผิดพลาดในการลบประกาศ' });
+    }
+});
+
+// ตรวจสอบและสร้างไฟล์ announcements.json ถ้าไม่มี
+function ensureAnnouncementsFileExists() {
+    const announcementsPath = path.join(__dirname, 'announcements.json');
+    if (!fs.existsSync(announcementsPath)) {
+        console.log('ไม่พบไฟล์ announcements.json, กำลังสร้างไฟล์...');
+        fs.writeFileSync(announcementsPath, JSON.stringify([], null, 2), 'utf8');
+        console.log('สร้างไฟล์ announcements.json สำเร็จ');
+    }
+}
+
 // เริ่มต้นแอปพลิเคชัน
 async function startApp() {
     try {
+        // ตรวจสอบและสร้างไฟล์ announcements.json ถ้าไม่มี
+        ensureAnnouncementsFileExists();
+        
         await initializeDatabase();
         await loadSettings(); // เพิ่มการโหลดการตั้งค่า
         await loadExistingBots();
