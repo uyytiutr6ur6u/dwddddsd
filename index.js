@@ -543,12 +543,37 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, captchaToken } = req.body;
     if (!username || !password) {
         return res.status(400).json({ error: 'กรุณาระบุชื่อผู้ใช้และรหัสผ่าน' });
     }
     
+    // ตรวจสอบ Cloudflare Turnstile CAPTCHA token
+    if (!captchaToken) {
+        return res.status(400).json({ error: 'กรุณายืนยันว่าคุณไม่ใช่โปรแกรมอัตโนมัติ' });
+    }
+    
     try {
+        // ตรวจสอบความถูกต้องของ CAPTCHA token กับ Cloudflare
+        const cloudflareResponse = await axios.post(
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            new URLSearchParams({
+                secret: '0x4AAAAAABIlh4l7OoIZ-eR6sRKpbJlkRLU',
+                response: captchaToken,
+                remoteip: req.ip
+            }),
+            {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }
+        );
+        
+        // หาก CAPTCHA ไม่ถูกต้อง
+        if (!cloudflareResponse.data.success) {
+            return res.status(400).json({ error: 'การยืนยันล้มเหลว โปรดลองอีกครั้ง' });
+        }
+        
         const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
         if (!user || user.password !== hashPassword(password)) {
             return res.status(401).json({ error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
