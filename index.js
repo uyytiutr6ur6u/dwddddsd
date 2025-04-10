@@ -1967,7 +1967,7 @@ async function startApp() {
         await loadBotStates();
         
         // Try to start HTTPS server if certificates exist
-        const sslPath = '/etc/letsencrypt/live/sujwodjnxnavwwck.vipv2boxth.xyz';
+        const sslPath = '/etc/letsencrypt/live/scriptbotonline.vipv2boxth.xyz';
         if (fs.existsSync(`${sslPath}/privkey.pem`) && fs.existsSync(`${sslPath}/fullchain.pem`)) {
             const httpsServer = https.createServer({
                 key: fs.readFileSync(`${sslPath}/privkey.pem`),
