@@ -538,7 +538,7 @@
             </div>
             
             <!-- Cloudflare Turnstile CAPTCHA -->
-            <div class="form-group" style="display: flex; justify-content: center; margin: 1rem 0;">
+            <div class="form-group" style="display: flex; justify-content: center; margin: 1rem 0;" id="captchaContainer">
               <div class="cf-turnstile" data-sitekey="0x4AAAAAABIlhyYA04DtO33E" data-theme="light"></div>
             </div>
             
@@ -575,6 +575,23 @@
   <script>
     // Set current year in footer
     document.getElementById('currentYear').textContent = new Date().getFullYear();
+    
+    // โหลดสถานะการตั้งค่าแคปซ่าเมื่อโหลดหน้า
+    window.addEventListener('DOMContentLoaded', function() {
+      // เรียก API เพื่อตรวจสอบสถานะแคปซ่า
+      fetch('/admin/settings/server')
+        .then(response => response.json())
+        .then(settings => {
+          // ถ้าปิดใช้งานแคปซ่า ให้ซ่อนส่วนของ CAPTCHA
+          if (!settings.captchaEnabled) {
+            document.getElementById('captchaContainer').style.display = 'none';
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching captcha settings:', err);
+          // กรณีไม่สามารถโหลดการตั้งค่าได้ ให้แสดง CAPTCHA ไว้ก่อนเพื่อความปลอดภัย
+        });
+    });
     
     // Toggle mobile menu
     function toggleMobileMenu() {
@@ -629,12 +646,17 @@
     document.getElementById('loginForm').addEventListener('submit', function(e) {
       e.preventDefault();
       
-      // Get the CAPTCHA token
-      const token = turnstile.getResponse();
+      // ตัวแปรเก็บสถานะการเปิดใช้งานแคปซ่า
+      let captchaEnabled = document.getElementById('captchaContainer').style.display !== 'none';
       
-      if (!token) {
-        showToast('กรุณายืนยันว่าคุณไม่ใช่โปรแกรมอัตโนมัติ', false);
-        return;
+      // Get the CAPTCHA token เฉพาะเมื่อเปิดใช้งานแคปซ่า
+      let token = null;
+      if (captchaEnabled) {
+        token = turnstile.getResponse();
+        if (!token) {
+          showToast('กรุณายืนยันว่าคุณไม่ใช่โปรแกรมอัตโนมัติ', false);
+          return;
+        }
       }
       
       const loginBtn = document.getElementById('loginBtn');
@@ -654,7 +676,7 @@
         body: JSON.stringify({
           username: document.getElementById('username').value,
           password: document.getElementById('password').value,
-          captchaToken: token // รวม token จาก Cloudflare Turnstile
+          captchaToken: token // ส่ง token เฉพาะเมื่อเปิดใช้งานแคปซ่า
         })
       })
       .then(response => response.json())
@@ -667,14 +689,18 @@
           }, 1500);
         } else {
           showToast(data.error || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองอีกครั้ง', false);
-          // รีเซ็ต CAPTCHA
-          turnstile.reset();
+          // รีเซ็ต CAPTCHA ถ้ามีการเปิดใช้งาน
+          if (captchaEnabled) {
+            turnstile.reset();
+          }
         }
       })
       .catch(err => {
         showToast('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองอีกครั้งในภายหลัง', false);
-        // รีเซ็ต CAPTCHA
-        turnstile.reset();
+        // รีเซ็ต CAPTCHA ถ้ามีการเปิดใช้งาน
+        if (captchaEnabled) {
+          turnstile.reset();
+        }
       })
       .finally(() => {
         loginBtn.disabled = false;
