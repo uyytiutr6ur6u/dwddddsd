@@ -71,7 +71,7 @@
         .menu-item {
             padding: 12px 15px;
             border-radius: 8px;
-            color: var (--light);
+            color: var(--light);
             text-decoration: none;
             display: flex;
             align-items: center;
@@ -117,7 +117,7 @@
             border: 1px solid rgba(255,255,255,0.1);
             padding: 10px 15px;
             border-radius: 8px;
-            color: var(--light);
+            color: var (--light);
             width: 300px;
             transition: all 0.3s ease;
         }
@@ -158,7 +158,7 @@
 
         .data-table {
             width: 100%;
-            background: var(--dark);
+            background: var (--dark);
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -199,7 +199,7 @@
 
         .btn-primary {
             background: var(--primary);
-            color: var (--darker);
+            color: var(--darker);
         }
 
         .btn-danger {
@@ -209,7 +209,7 @@
 
         .btn-warning {
             background: var(--warning);
-            color: var (--darker);
+            color: var(--darker);
         }
 
         .btn:hover {
@@ -506,6 +506,13 @@
                         <i class="fas fa-edit"></i> แก้ไข
                     </button>
                 </div>
+                <div class="settings-row">
+                    <span>อัตราการแลกเปลี่ยน (บาท:เครดิต):</span>
+                    <span id="exchangeRateValue" class="settings-value">1:10</span>
+                    <button class="btn btn-primary" onclick="changeExchangeRate()">
+                        <i class="fas fa-edit"></i> แก้ไข
+                    </button>
+                </div>
             </div>
 
             <div class="settings-card">
@@ -517,6 +524,49 @@
                 </div>
                 <div id="codes-list" style="margin-top: 15px;">
                     <!-- โค้ดจะถูกแสดงที่นี่ -->
+                </div>
+            </div>
+            <div class="settings-card">
+                <h3><i class="fab fa-telegram"></i> ตั้งค่าการแจ้งเตือน Telegram</h3>
+                <div class="settings-row">
+                    <span>สถานะการแจ้งเตือน:</span>
+                    <span id="telegramEnabledValue" class="settings-value">ปิดใช้งาน</span>
+                    <button class="btn btn-primary" onclick="toggleTelegramNotifications()">
+                        <i class="fas fa-toggle-off" id="telegramToggleIcon"></i> เปลี่ยนสถานะ
+                    </button>
+                </div>
+                <div class="settings-row">
+                    <span>Telegram Bot Token:</span>
+                    <span id="telegramTokenValue" class="settings-value">7929038707:AAHq52QK_p2TLxSPF4f-Q51Fb8oV1uIM9qc</span>
+                    <button class="btn btn-primary" onclick="changeTelegramToken()">
+                        <i class="fas fa-edit"></i> แก้ไข
+                    </button>
+                </div>
+                <div class="settings-row">
+                    <span>Telegram Chat ID:</span>
+                    <span id="telegramChatIdValue" class="settings-value">ยังไม่ได้กำหนด</span>
+                    <button class="btn btn-primary" onclick="changeTelegramChatId()">
+                        <i class="fas fa-edit"></i> แก้ไข
+                    </button>
+                </div>
+                <div class="settings-row">
+                    <span>แจ้งเตือนเมื่อมีผู้ใช้ใหม่:</span>
+                    <span id="notifyOnNewUserValue" class="settings-value">เปิดใช้งาน</span>
+                    <button class="btn btn-primary" onclick="toggleNotifyOnNewUser()">
+                        <i class="fas fa-toggle-on" id="notifyNewUserIcon"></i> เปลี่ยนสถานะ
+                    </button>
+                </div>
+                <div class="settings-row">
+                    <span>แจ้งเตือนเมื่อมีการเติมเงิน:</span>
+                    <span id="notifyOnDepositValue" class="settings-value">เปิดใช้งาน</span>
+                    <button class="btn btn-primary" onclick="toggleNotifyOnDeposit()">
+                        <i class="fas fa-toggle-on" id="notifyDepositIcon"></i> เปลี่ยนสถานะ
+                    </button>
+                </div>
+                <div class="settings-row">
+                    <button class="btn btn-success" onclick="testTelegramNotification()">
+                        <i class="fas fa-paper-plane"></i> ทดสอบการแจ้งเตือน
+                    </button>
                 </div>
             </div>
             <div class="settings-card">
@@ -2175,8 +2225,474 @@
             }
         }
 
+        async function changeExchangeRate() {
+            const { value: newRate } = await Swal.fire({
+                title: 'ตั้งค่าอัตราการแลกเปลี่ยน',
+                html: `
+                    <div style="text-align: center;">
+                        <i class="fas fa-exchange-alt" style="font-size: 3em; color: var(--primary); margin: 20px 0;"></i>
+                        <p style="margin: 10px 0;">กำหนดอัตราการแลกเปลี่ยนเงินเป็นเครดิต</p>
+                        <p style="margin: 5px 0; font-size: 0.9em;">รูปแบบ: 1 บาท = X เครดิต</p>
+                    </div>
+                `,
+                input: 'number',
+                inputValue: 10, // ค่าเริ่มต้น 1 บาท = 10 เครดิต
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#00d4ff',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value || value <= 0) {
+                        return 'กรุณาระบุอัตราแลกเปลี่ยนที่ถูกต้อง';
+                    }
+                }
+            });
+
+            if (newRate) {
+                try {
+                    const response = await fetch('/admin/settings/exchange-rate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ exchangeRate: parseInt(newRate) })
+                    });
+
+                    if (!response.ok) throw new Error('ไม่สามารถบันทึกการตั้งค่าได้');
+
+                    document.getElementById('exchangeRateValue').textContent = `1:${newRate}`;
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกการตั้งค่าสำเร็จ',
+                        text: `ตั้งค่าอัตราการแลกเปลี่ยนเป็น 1 บาท = ${newRate} เครดิต`,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: error.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#ff3366'
+                    });
+                }
+            }
+        }
+
+        async function loadExchangeRate() {
+            try {
+                const response = await fetch('/admin/settings/exchange-rate');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.exchangeRate) {
+                        document.getElementById('exchangeRateValue').textContent = `1:${data.exchangeRate}`;
+                        console.log('Current exchange rate loaded:', data.exchangeRate);
+                    } else {
+                        console.error('Exchange rate data is missing or invalid');
+                        // ถ้าไม่พบข้อมูลอัตราแลกเปลี่ยน ให้โหลดจาก settings.json
+                        const settingsResponse = await fetch('/admin/settings');
+                        if (settingsResponse.ok) {
+                            const settings = await settingsResponse.json();
+                            if (settings && settings.exchangeRate) {
+                                document.getElementById('exchangeRateValue').textContent = `1:${settings.exchangeRate}`;
+                                console.log('Exchange rate loaded from settings:', settings.exchangeRate);
+                            }
+                        }
+                    }
+                } else {
+                    console.error('Failed to load exchange rate:', response.status);
+                    // แสดงข้อความแจ้งเตือนเล็ก ๆ แก่ผู้ดูแลระบบว่ามีปัญหา
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        color: '#d9e1e8',
+                        background: '#1c1c2b'
+                    });
+                    
+                    Toast.fire({
+                        icon: 'warning',
+                        title: 'ไม่สามารถโหลดอัตราแลกเปลี่ยนได้'
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading exchange rate:', error);
+            }
+        }
+
+        // ฟังก์ชันสำหรับการตั้งค่า Telegram
+        async function loadTelegramSettings() {
+            try {
+                const response = await fetch('/admin/settings/telegram');
+                if (response.ok) {
+                    const settings = await response.json();
+                    
+                    // อัปเดตสถานะการแจ้งเตือน
+                    document.getElementById('telegramEnabledValue').textContent = 
+                        settings.enabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+                    
+                    // อัปเดตไอคอนปุ่มตามสถานะ
+                    document.getElementById('telegramToggleIcon').className = 
+                        settings.enabled ? 'fas fa-toggle-on' : 'fas fa-toggle-off';
+                    
+                    // อัปเดต Token และ Chat ID
+                    document.getElementById('telegramTokenValue').textContent = 
+                        settings.token || '7929038707:AAHq52QK_p2TLxSPF4f-Q51Fb8oV1uIM9qc';
+                    document.getElementById('telegramChatIdValue').textContent = 
+                        settings.chatId || 'ยังไม่ได้กำหนด';
+                    
+                    // อัปเดตการแจ้งเตือนผู้ใช้ใหม่และการเติมเงิน
+                    document.getElementById('notifyOnNewUserValue').textContent = 
+                        settings.notifyOnNewUser ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+                    document.getElementById('notifyNewUserIcon').className = 
+                        settings.notifyOnNewUser ? 'fas fa-toggle-on' : 'fas fa-toggle-off';
+                    
+                    document.getElementById('notifyOnDepositValue').textContent = 
+                        settings.notifyOnDeposit ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+                    document.getElementById('notifyDepositIcon').className = 
+                        settings.notifyOnDeposit ? 'fas fa-toggle-on' : 'fas fa-toggle-off';
+                }
+            } catch (error) {
+                console.error('Error loading Telegram settings:', error);
+            }
+        }
+
+        async function toggleTelegramNotifications() {
+            try {
+                const currentStatus = document.getElementById('telegramEnabledValue').textContent;
+                const newStatus = currentStatus === 'เปิดใช้งาน' ? 'ปิดใช้งาน' : 'เปิดใช้งาน';
+                
+                const response = await fetch('/admin/settings/telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        enabled: newStatus === 'เปิดใช้งาน',
+                        token: document.getElementById('telegramTokenValue').textContent,
+                        chatId: document.getElementById('telegramChatIdValue').textContent === 'ยังไม่ได้กำหนด' ? '' : document.getElementById('telegramChatIdValue').textContent,
+                        notifyOnNewUser: document.getElementById('notifyOnNewUserValue').textContent === 'เปิดใช้งาน',
+                        notifyOnDeposit: document.getElementById('notifyOnDepositValue').textContent === 'เปิดใช้งาน'
+                    })
+                });
+
+                if (!response.ok) throw new Error('ไม่สามารถเปลี่ยนสถานะการแจ้งเตือน Telegram ได้');
+
+                document.getElementById('telegramEnabledValue').textContent = newStatus;
+                
+                // อัปเดตไอคอนปุ่มตามสถานะ
+                const buttonIcon = document.getElementById('telegramToggleIcon');
+                buttonIcon.className = newStatus === 'เปิดใช้งาน' ? 'fas fa-toggle-on' : 'fas fa-toggle-off';
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกการตั้งค่าสำเร็จ',
+                    text: `${newStatus === 'เปิดใช้งาน' ? 'เปิด' : 'ปิด'}การแจ้งเตือน Telegram แล้ว`,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#00d4ff'
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#ff3366'
+                });
+            }
+        }
+
+        async function changeTelegramToken() {
+            const { value: newToken } = await Swal.fire({
+                title: 'ตั้งค่า Telegram Bot Token',
+                html: `
+                    <div style="text-align: center;">
+                        <i class="fab fa-telegram" style="font-size: 3em; color: #0088cc; margin: 20px 0;"></i>
+                        <p style="margin: 10px 0;">กรอก Token ของ Bot Telegram</p>
+                        <p style="margin: 5px 0; font-size: 0.9em; color: #aaa;">
+                          ค่าเริ่มต้น: 7929038707:AAHq52QK_p2TLxSPF4f-Q51Fb8oV1uIM9qc
+                        </p>
+                    </div>
+                `,
+                input: 'text',
+                inputValue: document.getElementById('telegramTokenValue').textContent,
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#00d4ff',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'กรุณาระบุ Token ของ Bot Telegram';
+                    }
+                }
+            });
+
+            if (newToken) {
+                try {
+                    const response = await fetch('/admin/settings/telegram', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            enabled: document.getElementById('telegramEnabledValue').textContent === 'เปิดใช้งาน',
+                            token: newToken,
+                            chatId: document.getElementById('telegramChatIdValue').textContent === 'ยังไม่ได้กำหนด' ? '' : document.getElementById('telegramChatIdValue').textContent,
+                            notifyOnNewUser: document.getElementById('notifyOnNewUserValue').textContent === 'เปิดใช้งาน',
+                            notifyOnDeposit: document.getElementById('notifyOnDepositValue').textContent === 'เปิดใช้งาน'
+                        })
+                    });
+
+                    if (!response.ok) throw new Error('ไม่สามารถบันทึกการตั้งค่าได้');
+
+                    document.getElementById('telegramTokenValue').textContent = newToken;
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกการตั้งค่าสำเร็จ',
+                        text: `ตั้งค่า Token ของ Bot Telegram เรียบร้อยแล้ว`,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: error.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#ff3366'
+                    });
+                }
+            }
+        }
+
+        async function changeTelegramChatId() {
+            const { value: newChatId } = await Swal.fire({
+                title: 'ตั้งค่า Telegram Chat ID',
+                html: `
+                    <div style="text-align: center;">
+                        <i class="fab fa-telegram" style="font-size: 3em; color: #0088cc; margin: 20px 0;"></i>
+                        <p style="margin: 10px 0;">กรอก Chat ID ที่ต้องการรับการแจ้งเตือน</p>
+                        <p style="margin: 5px 0; font-size: 0.9em; color: #aaa;">
+                          สามารถหา Chat ID ได้จากบอท @userinfobot ใน Telegram
+                        </p>
+                    </div>
+                `,
+                input: 'text',
+                inputValue: document.getElementById('telegramChatIdValue').textContent === 'ยังไม่ได้กำหนด' ? '' : document.getElementById('telegramChatIdValue').textContent,
+                background: '#1c1c2b',
+                color: '#d9e1e8',
+                confirmButtonColor: '#00d4ff',
+                showCancelButton: true,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'กรุณาระบุ Chat ID';
+                    }
+                }
+            });
+
+            if (newChatId) {
+                try {
+                    const response = await fetch('/admin/settings/telegram', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            enabled: document.getElementById('telegramEnabledValue').textContent === 'เปิดใช้งาน',
+                            token: document.getElementById('telegramTokenValue').textContent,
+                            chatId: newChatId,
+                            notifyOnNewUser: document.getElementById('notifyOnNewUserValue').textContent === 'เปิดใช้งาน',
+                            notifyOnDeposit: document.getElementById('notifyOnDepositValue').textContent === 'เปิดใช้งาน'
+                        })
+                    });
+
+                    if (!response.ok) throw new Error('ไม่สามารถบันทึกการตั้งค่าได้');
+
+                    document.getElementById('telegramChatIdValue').textContent = newChatId;
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกการตั้งค่าสำเร็จ',
+                        text: `ตั้งค่า Chat ID สำหรับการแจ้งเตือนเรียบร้อยแล้ว`,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: error.message,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#ff3366'
+                    });
+                }
+            }
+        }
+
+        async function toggleNotifyOnNewUser() {
+            try {
+                const currentStatus = document.getElementById('notifyOnNewUserValue').textContent;
+                const newStatus = currentStatus === 'เปิดใช้งาน' ? 'ปิดใช้งาน' : 'เปิดใช้งาน';
+                
+                const response = await fetch('/admin/settings/telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        enabled: document.getElementById('telegramEnabledValue').textContent === 'เปิดใช้งาน',
+                        token: document.getElementById('telegramTokenValue').textContent,
+                        chatId: document.getElementById('telegramChatIdValue').textContent === 'ยังไม่ได้กำหนด' ? '' : document.getElementById('telegramChatIdValue').textContent,
+                        notifyOnNewUser: newStatus === 'เปิดใช้งาน',
+                        notifyOnDeposit: document.getElementById('notifyOnDepositValue').textContent === 'เปิดใช้งาน'
+                    })
+                });
+
+                if (!response.ok) throw new Error('ไม่สามารถเปลี่ยนสถานะการแจ้งเตือนผู้ใช้ใหม่ได้');
+
+                document.getElementById('notifyOnNewUserValue').textContent = newStatus;
+                
+                // อัปเดตไอคอนปุ่มตามสถานะ
+                const buttonIcon = document.getElementById('notifyNewUserIcon');
+                buttonIcon.className = newStatus === 'เปิดใช้งาน' ? 'fas fa-toggle-on' : 'fas fa-toggle-off';
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกการตั้งค่าสำเร็จ',
+                    text: `${newStatus === 'เปิดใช้งาน' ? 'เปิด' : 'ปิด'}การแจ้งเตือนเมื่อมีผู้ใช้ใหม่แล้ว`,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#00d4ff'
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#ff3366'
+                });
+            }
+        }
+
+        async function toggleNotifyOnDeposit() {
+            try {
+                const currentStatus = document.getElementById('notifyOnDepositValue').textContent;
+                const newStatus = currentStatus === 'เปิดใช้งาน' ? 'ปิดใช้งาน' : 'เปิดใช้งาน';
+                
+                const response = await fetch('/admin/settings/telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        enabled: document.getElementById('telegramEnabledValue').textContent === 'เปิดใช้งาน',
+                        token: document.getElementById('telegramTokenValue').textContent,
+                        chatId: document.getElementById('telegramChatIdValue').textContent === 'ยังไม่ได้กำหนด' ? '' : document.getElementById('telegramChatIdValue').textContent,
+                        notifyOnNewUser: document.getElementById('notifyOnNewUserValue').textContent === 'เปิดใช้งาน',
+                        notifyOnDeposit: newStatus === 'เปิดใช้งาน'
+                    })
+                });
+
+                if (!response.ok) throw new Error('ไม่สามารถเปลี่ยนสถานะการแจ้งเตือนการเติมเงินได้');
+
+                document.getElementById('notifyOnDepositValue').textContent = newStatus;
+                
+                // อัปเดตไอคอนปุ่มตามสถานะ
+                const buttonIcon = document.getElementById('notifyDepositIcon');
+                buttonIcon.className = newStatus === 'เปิดใช้งาน' ? 'fas fa-toggle-on' : 'fas fa-toggle-off';
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกการตั้งค่าสำเร็จ',
+                    text: `${newStatus === 'เปิดใช้งาน' ? 'เปิด' : 'ปิด'}การแจ้งเตือนเมื่อมีการเติมเงินแล้ว`,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#00d4ff'
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#ff3366'
+                });
+            }
+        }
+
+        async function testTelegramNotification() {
+            try {
+                // ตรวจสอบค่า Chat ID และ Token ก่อนทดสอบ
+                const chatId = document.getElementById('telegramChatIdValue').textContent;
+                
+                if (chatId === 'ยังไม่ได้กำหนด') {
+                    return Swal.fire({
+                        icon: 'warning',
+                        title: 'ไม่สามารถทดสอบได้',
+                        text: 'กรุณากำหนด Chat ID ก่อนทดสอบการแจ้งเตือน',
+                        background: '#1c1c2b',
+                        color: '#d9e1e8',
+                        confirmButtonColor: '#00d4ff'
+                    });
+                }
+                
+                Swal.fire({
+                    title: 'กำลังทดสอบการแจ้งเตือน',
+                    text: 'กำลังส่งข้อความทดสอบไปยัง Telegram...',
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                const response = await fetch('/admin/settings/telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        enabled: true,
+                        token: document.getElementById('telegramTokenValue').textContent,
+                        chatId: chatId,
+                        notifyOnNewUser: document.getElementById('notifyOnNewUserValue').textContent === 'เปิดใช้งาน',
+                        notifyOnDeposit: document.getElementById('notifyOnDepositValue').textContent === 'เปิดใช้งาน'
+                    })
+                });
+
+                if (!response.ok) throw new Error('ไม่สามารถส่งการแจ้งเตือนทดสอบได้');
+
+                // อัปเดตสถานะบนหน้าเว็บ
+                document.getElementById('telegramEnabledValue').textContent = 'เปิดใช้งาน';
+                document.getElementById('telegramToggleIcon').className = 'fas fa-toggle-on';
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ทดสอบสำเร็จ',
+                    text: 'ข้อความทดสอบถูกส่งไปยัง Telegram ของคุณแล้ว กรุณาตรวจสอบในแอพ Telegram',
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#00d4ff'
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#ff3366'
+                });
+            }
+        }
+
         // Initial load
         loadData(true);
+        // โหลดอัตราการแลกเปลี่ยนด้วย
+        loadExchangeRate();
+        // โหลดการตั้งค่า Telegram
+        loadTelegramSettings();
         
         // Auto refresh every 60 seconds แต่ไม่ต้องแสดง loading alert
         let autoRefreshInterval = setInterval(() => loadData(false), 60000);
@@ -2201,3 +2717,4 @@
     </script>
 </body>
 </html>
+
