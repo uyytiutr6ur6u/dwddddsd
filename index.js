@@ -25,6 +25,17 @@ let systemSettings = {
   captchaEnabled: true  // เพิ่มการตั้งค่าเปิด/ปิดระบบแคปซ่า โดยค่าเริ่มต้นคือเปิด
 };
 
+// เพิ่มตัวแปรสำหรับเก็บการตั้งค่า Telegram
+let settings = {
+  telegramNotifications: {
+    enabled: false,
+    token: "7929038707:AAHq52QK_p2TLxSPF4f-Q51Fb8oV1uIM9qc",
+    chatId: "",
+    notifyOnNewUser: true,
+    notifyOnDeposit: true
+  }
+};
+
 // เชื่อมต่อกับฐานข้อมูล SQLite
 let db;
 async function initializeDatabase() {
@@ -454,6 +465,20 @@ async function loadBotStates() {
 
 async function loadSettings() {
     try {
+        // โหลดการตั้งค่าจาก settings.json
+        if (fs.existsSync('settings.json')) {
+            const settingsData = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
+            // นำเข้าการตั้งค่าจากไฟล์
+            defaultSettings.defaultCredits = settingsData.defaultCredits || 60;
+            systemSettings.runBotCredits = settingsData.runBotCredits || 15;
+            defaultSettings.exchangeRate = settingsData.exchangeRate || 3;
+            
+            // โหลดการตั้งค่า Telegram
+            if (settingsData.telegramNotifications) {
+                settings.telegramNotifications = settingsData.telegramNotifications;
+            }
+        }
+        
         // โหลดค่า default_credits
         const defaultCreditsSettings = await db.get('SELECT value FROM settings WHERE key = ?', ['default_credits']);
         if (defaultCreditsSettings) {
@@ -468,7 +493,8 @@ async function loadSettings() {
         
         console.log('โหลดการตั้งค่าเรียบร้อย:', { 
             defaultCredits: defaultSettings.defaultCredits,
-            captchaEnabled: systemSettings.captchaEnabled
+            captchaEnabled: systemSettings.captchaEnabled,
+            telegramEnabled: settings.telegramNotifications?.enabled || false
         });
     } catch (err) {
         console.error('Error loading settings:', err);
@@ -569,6 +595,109 @@ app.post('/admin/settings/captcha', (req, res) => {
   }
 });
 
+// API สำหรับตั้งค่าอัตราการแลกเปลี่ยน (บาท:เครดิต)
+app.post('/admin/settings/exchange-rate', (req, res) => {
+  try {
+    const { exchangeRate } = req.body;
+    if (!exchangeRate || exchangeRate <= 0) {
+      return res.status(400).json({ error: 'กรุณาระบุอัตราแลกเปลี่ยนที่ถูกต้อง' });
+    }
+    
+    const settings = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
+    settings.exchangeRate = exchangeRate;
+    fs.writeFileSync('settings.json', JSON.stringify(settings, null, 2));
+    
+    res.json({ success: true, exchangeRate });
+  } catch (error) {
+    console.error('Error setting exchange rate:', error);
+    res.status(500).json({ error: 'ไม่สามารถบันทึกการตั้งค่าได้' });
+  }
+});
+
+// API สำหรับดึงค่าอัตราการแลกเปลี่ยน
+app.get('/admin/settings/exchange-rate', (req, res) => {
+  try {
+    // ตรวจสอบว่าไฟล์ settings.json มีหรือไม่ ถ้าไม่มีให้สร้างใหม่
+    if (!fs.existsSync('settings.json')) {
+      const defaultSettings = {
+        defaultCredits: 60,
+        runBotCredits: 15,
+        exchangeRate: 10
+      };
+      fs.writeFileSync('settings.json', JSON.stringify(defaultSettings, null, 2));
+    }
+    
+    const settings = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
+    res.json({ exchangeRate: settings.exchangeRate || 10 });
+  } catch (error) {
+    console.error('Error getting exchange rate:', error);
+    res.status(500).json({ error: 'ไม่สามารถดึงข้อมูลอัตราการแลกเปลี่ยนได้' });
+  }
+});
+
+// เพิ่ม endpoints สำหรับการตั้งค่า Telegram
+app.get('/admin/settings/telegram', (req, res) => {
+  try {
+    if (fs.existsSync('settings.json')) {
+      const settingsData = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
+      if (settingsData.telegramNotifications) {
+        return res.json(settingsData.telegramNotifications);
+      }
+    }
+    
+    return res.json({
+      enabled: false,
+      token: "",
+      chatId: "",
+      notifyOnNewUser: true,
+      notifyOnDeposit: true
+    });
+  } catch (err) {
+    console.error('Error getting Telegram settings:', err);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูลการตั้งค่า Telegram' });
+  }
+});
+
+app.post('/admin/settings/telegram', (req, res) => {
+  try {
+    const { enabled, token, chatId, notifyOnNewUser, notifyOnDeposit } = req.body;
+    
+    const settingsData = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
+    settingsData.telegramNotifications = {
+      enabled: Boolean(enabled),
+      token: token || "7929038707:AAHq52QK_p2TLxSPF4f-Q51Fb8oV1uIM9qc",
+      chatId: chatId || "",
+      notifyOnNewUser: Boolean(notifyOnNewUser),
+      notifyOnDeposit: Boolean(notifyOnDeposit)
+    };
+    
+    fs.writeFileSync('settings.json', JSON.stringify(settingsData, null, 2));
+    
+    // อัปเดตตัวแปรในแอพ
+    settings.telegramNotifications = settingsData.telegramNotifications;
+    
+    // ทดสอบการส่งข้อความ
+    if (enabled && chatId) {
+      sendTelegramNotification('✅ <b>ทดสอบการแจ้งเตือน</b>\nการตั้งค่าการแจ้งเตือน Telegram สำเร็จ!')
+        .then(() => {
+          console.log('ส่งข้อความทดสอบ Telegram สำเร็จ');
+        })
+        .catch(err => {
+          console.error('ไม่สามารถส่งข้อความทดสอบ Telegram:', err);
+        });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'บันทึกการตั้งค่า Telegram สำเร็จ',
+      settings: settingsData.telegramNotifications
+    });
+  } catch (err) {
+    console.error('Error updating Telegram settings:', err);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการบันทึกการตั้งค่า Telegram' });
+  }
+});
+
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -586,6 +715,13 @@ app.post('/register', async (req, res) => {
             'INSERT INTO users (username, password, credits) VALUES (?, ?, ?)',
             [username, hashedPassword, defaultSettings.defaultCredits]
         );
+        
+        // ส่งการแจ้งเตือน Telegram เมื่อมีผู้ใช้ใหม่
+        if (settings.telegramNotifications && 
+            settings.telegramNotifications.enabled && 
+            settings.telegramNotifications.notifyOnNewUser) {
+            sendTelegramNotification(`🎉 <b>ผู้ใช้ใหม่ลงทะเบียน</b>\n\nชื่อผู้ใช้: <code>${username}</code>\nเครดิตเริ่มต้น: <code>${defaultSettings.defaultCredits}</code> เครดิต\nเวลา: <code>${new Date().toLocaleString('th-TH')}</code>`);
+        }
         
         res.json({ message: 'ลงทะเบียนสำเร็จ' });
     } catch (err) {
@@ -1718,25 +1854,41 @@ app.post('/payment/truemoney', async (req, res) => {
     const matchResult = voucherUrl.match(regex);
 
     if (!matchResult || !matchResult[1]) {
-        return res.status(400).json({ error: 'ลิงก์ซองอังเปาไม่ถูกต้อง' });
+        return res.status(400).json({ error: 'ลิงก์ซองของขวัญไม่ถูกต้อง' });
     }
 
+    const voucherCode = matchResult[1];
+
     try {
+        // ตรวจสอบว่าผู้ใช้มีอยู่จริงหรือไม่
         const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
         if (!user) {
             return res.status(404).json({ error: 'ไม่พบผู้ใช้' });
         }
 
-        const voucherCode = matchResult[1];
+        // ตรวจสอบว่าซองนี้เคยถูกใช้ในระบบแล้วหรือไม่
+        const usedVoucher = await db.get('SELECT * FROM payments WHERE voucher_code = ?', [voucherCode]);
+        if (usedVoucher) {
+            return res.status(400).json({ 
+                error: 'ซองของขวัญนี้ถูกใช้ในระบบไปแล้ว',
+                voucherInfo: {
+                    amount: usedVoucher.amount,
+                    redeemed: "1/1",
+                    total: "1",
+                    expireDate: new Date(usedVoucher.timestamp * 1000).toLocaleString('th-TH')
+                }
+            });
+        }
+
         const paymentPhone = "0825658423"; // เบอร์รับเงิน
         const apiUrl = `https://store.cyber-safe.pro/api/topup/truemoney/angpaofree/${voucherCode}/${paymentPhone}`;
 
         try {
-            const response = await axios.get(apiUrl);
-            const data = response.data;
+            const response = await fetch(apiUrl);
+            const data = await response.json();
 
-            if (data.status && data.status.code !== "SUCCESS") {
-                let errorMessage = "การเติมเงินล้มเหลว: ";
+            if (!response.ok || data.success === false) {
+                let errorMessage = "เกิดข้อผิดพลาด: ";
                 if (data.status.code === "VOUCHER_EXPIRED") errorMessage += "ซองหมดอายุ";
                 else if (data.status.code === "VOUCHER_REDEEMED") errorMessage += "ซองใช้แล้ว";
                 else errorMessage += data.status.message || "API ขัดข้อง";
@@ -1756,8 +1908,22 @@ app.post('/payment/truemoney', async (req, res) => {
             }
 
             const amount = data.data.voucher.amount_baht;
-            const credits = amount * 10; // 1 บาท = 10 เครดิต
-
+            
+            // ดึงค่าอัตราแลกเปลี่ยนจากการตั้งค่า
+            let settings;
+            try {
+                settings = JSON.parse(fs.readFileSync('settings.json', 'utf8'));
+            } catch (error) {
+                console.error('Error reading settings.json:', error);
+                settings = { exchangeRate: 10 }; // ค่าเริ่มต้นหากไม่สามารถอ่านไฟล์ได้
+            }
+            
+            // คำนวณเครดิตตามอัตราแลกเปลี่ยนที่ตั้งไว้
+            const exchangeRate = settings.exchangeRate || 10;
+            const credits = amount * exchangeRate;
+            
+            console.log(`เติมเงิน: ${amount} บาท, อัตราแลกเปลี่ยน: 1:${exchangeRate}, เครดิตที่ได้: ${credits}`);
+            
             // เพิ่มเครดิตให้ผู้ใช้
             await db.run('UPDATE users SET credits = credits + ? WHERE username = ?', [credits, username]);
             const updatedUser = await db.get('SELECT credits FROM users WHERE username = ?', [username]);
@@ -1767,6 +1933,13 @@ app.post('/payment/truemoney', async (req, res) => {
                 'INSERT INTO payments (username, amount, credits, payment_method, voucher_code) VALUES (?, ?, ?, ?, ?)',
                 [username, amount, credits, 'truemoney', voucherCode]
             );
+            
+            // ส่งการแจ้งเตือน Telegram เมื่อมีการเติมเงิน
+            if (settings.telegramNotifications && 
+                settings.telegramNotifications.enabled && 
+                settings.telegramNotifications.notifyOnDeposit) {
+                sendTelegramNotification(`💰 <b>มีการเติมเงินเข้าระบบ</b>\n\nผู้ใช้: <code>${username}</code>\nจำนวนเงิน: <code>${amount}</code> บาท\nเครดิตที่ได้รับ: <code>${credits}</code> เครดิต\nเวลา: <code>${new Date().toLocaleString('th-TH')}</code>`);
+            }
 
             res.json({
                 success: true,
@@ -2011,6 +2184,43 @@ function ensureAnnouncementsFileExists() {
         console.log('ไม่พบไฟล์ announcements.json, กำลังสร้างไฟล์...');
         fs.writeFileSync(announcementsPath, JSON.stringify([], null, 2), 'utf8');
         console.log('สร้างไฟล์ announcements.json สำเร็จ');
+    }
+}
+
+// เพิ่มฟังก์ชันสำหรับส่งการแจ้งเตือนผ่าน Telegram
+async function sendTelegramNotification(message) {
+    try {
+        if (!settings.telegramNotifications || !settings.telegramNotifications.enabled) {
+            return;
+        }
+        
+        const token = settings.telegramNotifications.token;
+        const chatId = settings.telegramNotifications.chatId;
+        
+        if (!token || !chatId) {
+            console.error('Token หรือ Chat ID ของ Telegram ไม่ถูกกำหนดค่า');
+            return;
+        }
+        
+        const url = `https://api.telegram.org/bot${token}/sendMessage`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: message,
+                parse_mode: 'HTML'
+            })
+        });
+        
+        const data = await response.json();
+        if (!data.ok) {
+            console.error('ไม่สามารถส่งการแจ้งเตือน Telegram:', data.description);
+        }
+    } catch (error) {
+        console.error('เกิดข้อผิดพลาดในการส่งการแจ้งเตือน Telegram:', error);
     }
 }
 
