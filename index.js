@@ -21,7 +21,8 @@ const HTTPS_PORT = 443;
 // ตัวแปรสำหรับเก็บการตั้งค่าระบบ
 let systemSettings = {
   defaultCredits: 60,
-  runBotCredits: 15
+  runBotCredits: 15,
+  captchaEnabled: true  // เพิ่มการตั้งค่าเปิด/ปิดระบบแคปซ่า โดยค่าเริ่มต้นคือเปิด
 };
 
 // เชื่อมต่อกับฐานข้อมูล SQLite
@@ -453,10 +454,22 @@ async function loadBotStates() {
 
 async function loadSettings() {
     try {
-        const settings = await db.get('SELECT value FROM settings WHERE key = ?', ['default_credits']);
-        if (settings) {
-            defaultSettings.defaultCredits = parseInt(settings.value);
+        // โหลดค่า default_credits
+        const defaultCreditsSettings = await db.get('SELECT value FROM settings WHERE key = ?', ['default_credits']);
+        if (defaultCreditsSettings) {
+            defaultSettings.defaultCredits = parseInt(defaultCreditsSettings.value);
         }
+        
+        // โหลดค่า captcha_enabled
+        const captchaSettings = await db.get('SELECT value FROM settings WHERE key = ?', ['captcha_enabled']);
+        if (captchaSettings) {
+            systemSettings.captchaEnabled = captchaSettings.value === '1';
+        }
+        
+        console.log('โหลดการตั้งค่าเรียบร้อย:', { 
+            defaultCredits: defaultSettings.defaultCredits,
+            captchaEnabled: systemSettings.captchaEnabled
+        });
     } catch (err) {
         console.error('Error loading settings:', err);
     }
@@ -517,6 +530,45 @@ app.post('/admin/settings/run-bot-credits', (req, res) => {
   res.json({ success: true, runBotCredits });
 });
 
+// เพิ่ม endpoints สำหรับการตั้งค่าเซิร์ฟเวอร์ (รวมถึงการตั้งค่าแคปซ่า)
+app.get('/admin/settings/server', (req, res) => {
+  try {
+    res.json({ 
+      captchaEnabled: systemSettings.captchaEnabled,
+      runBotCredits: systemSettings.runBotCredits,
+      defaultCredits: defaultSettings.defaultCredits
+    });
+  } catch (err) {
+    console.error('Error getting server settings:', err);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูลการตั้งค่าเซิร์ฟเวอร์' });
+  }
+});
+
+// Endpoint สำหรับการเปิด/ปิดระบบแคปซ่า
+app.post('/admin/settings/captcha', (req, res) => {
+  try {
+    const { enabled } = req.body;
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({ error: 'ค่าสถานะไม่ถูกต้อง ต้องเป็น boolean (true/false)' });
+    }
+    
+    systemSettings.captchaEnabled = enabled;
+    
+    // บันทึกการตั้งค่าลงในฐานข้อมูล
+    db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', 
+      ['captcha_enabled', enabled ? '1' : '0']);
+    
+    res.json({ 
+      success: true, 
+      message: `${enabled ? 'เปิด' : 'ปิด'}ระบบยืนยันตัวตนแคปซ่าแล้ว`,
+      captchaEnabled: enabled
+    });
+  } catch (err) {
+    console.error('Error updating captcha settings:', err);
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการอัปเดตการตั้งค่าแคปซ่า' });
+  }
+});
+
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -548,32 +600,39 @@ app.post('/login', async (req, res) => {
         return res.status(400).json({ error: 'กรุณาระบุชื่อผู้ใช้และรหัสผ่าน' });
     }
     
-    // ตรวจสอบ Cloudflare Turnstile CAPTCHA token
-    if (!captchaToken) {
-        return res.status(400).json({ error: 'กรุณายืนยันว่าคุณไม่ใช่โปรแกรมอัตโนมัติ' });
+    // ตรวจสอบ Cloudflare Turnstile CAPTCHA token เฉพาะเมื่อเปิดใช้งานระบบแคปซ่า
+    if (systemSettings.captchaEnabled) {
+        if (!captchaToken) {
+            return res.status(400).json({ error: 'กรุณายืนยันว่าคุณไม่ใช่โปรแกรมอัตโนมัติ' });
+        }
+        
+        try {
+            // ตรวจสอบความถูกต้องของ CAPTCHA token กับ Cloudflare
+            const cloudflareResponse = await axios.post(
+                'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+                new URLSearchParams({
+                    secret: '0x4AAAAAABIlh4l7OoIZ-eR6sRKpbJlkRLU',
+                    response: captchaToken,
+                    remoteip: req.ip
+                }),
+                {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+                }
+            );
+            
+            // หาก CAPTCHA ไม่ถูกต้อง
+            if (!cloudflareResponse.data.success) {
+                return res.status(400).json({ error: 'การยืนยันล้มเหลว โปรดลองอีกครั้ง' });
+            }
+        } catch (err) {
+            console.error('Error verifying CAPTCHA:', err);
+            return res.status(500).json({ error: 'เกิดข้อผิดพลาดในการตรวจสอบแคปซ่า' });
+        }
     }
     
     try {
-        // ตรวจสอบความถูกต้องของ CAPTCHA token กับ Cloudflare
-        const cloudflareResponse = await axios.post(
-            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
-            new URLSearchParams({
-                secret: '0x4AAAAAABIlh4l7OoIZ-eR6sRKpbJlkRLU',
-                response: captchaToken,
-                remoteip: req.ip
-            }),
-            {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-            }
-        );
-        
-        // หาก CAPTCHA ไม่ถูกต้อง
-        if (!cloudflareResponse.data.success) {
-            return res.status(400).json({ error: 'การยืนยันล้มเหลว โปรดลองอีกครั้ง' });
-        }
-        
         const user = await db.get('SELECT * FROM users WHERE username = ?', [username]);
         if (!user || user.password !== hashPassword(password)) {
             return res.status(401).json({ error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
