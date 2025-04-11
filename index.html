@@ -46,6 +46,10 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            user-select: none; /* Prevent text selection for all elements */
+            -webkit-user-select: none; /* Safari support */
+            -moz-user-select: none; /* Firefox support */
+            -ms-user-select: none; /* IE/Edge support */
         }
 
         body {
@@ -57,6 +61,10 @@
             font-size: 14px;
             line-height: 1.6;
             overflow-x: hidden; /* Prevent horizontal scroll */
+            user-select: none; /* Prevent text selection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         h1, h2, h3 {
@@ -440,7 +448,7 @@
         .terminal .log-result::before { content: '✅ [ผลลัพธ์] '; color: #00FF00; font-weight: bold; }
 
         .terminal .log-error { color: #FF0000; } /* Bright red */
-        .terminal .log-error::before { content: '❌ [ผิดพลาด] '; color: #FF0000; font-weight: bold; }
+        .terminal .log-error::before { content: '❌ [ผิดลัพธ์] '; color: #FF0000; font-weight: bold; }
 
         .terminal .log-command { color: #FFFF00; font-style: italic; } /* Bright yellow */
         .terminal .log-command::before { content: '$ '; } /* Changed to TERMUX-like prompt */
