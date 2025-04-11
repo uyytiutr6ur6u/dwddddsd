@@ -153,6 +153,22 @@
 
         document.getElementById('usernameDisplay').textContent = username;
 
+        // โหลดอัตราการแลกเปลี่ยนจากเซิร์ฟเวอร์
+        async function loadExchangeRate() {
+            try {
+                const response = await fetch('/admin/settings/exchange-rate');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.exchangeRate) {
+                        document.querySelector('.exchange-rate').innerHTML = 
+                            `<i class="fas fa-exchange-alt me-2"></i>อัตราแลกเปลี่ยน: 1 บาท = ${data.exchangeRate} เครดิต`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading exchange rate:', error);
+            }
+        }
+        
         // แสดงเครดิตปัจจุบัน
         async function updateCredits() {
             try {
@@ -165,6 +181,7 @@
             }
         }
         updateCredits();
+        loadExchangeRate(); // เพิ่มการโหลดอัตราการแลกเปลี่ยน
 
         // จัดการการออกจากระบบ
         document.getElementById('logoutButton').addEventListener('click', (e) => {
