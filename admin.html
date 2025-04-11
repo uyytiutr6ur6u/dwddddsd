@@ -480,6 +480,17 @@
             </div>
             
             <div class="settings-card">
+                <h3><i class="fas fa-server"></i> ตั้งค่าเซิร์ฟเวอร์</h3>
+                <div class="settings-row">
+                    <span>ระบบยืนยันตัวตนแคปซ่า:</span>
+                    <span id="captchaEnabledValue" class="settings-value">เปิดใช้งาน</span>
+                    <button class="btn btn-primary" onclick="toggleCaptcha()">
+                        <i class="fas fa-toggle-on"></i> เปลี่ยนสถานะ
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-card">
                 <h3><i class="fas fa-coins"></i> ตั้งค่าเครดิต</h3>
                 <div class="settings-row">
                     <span>เครดิตเริ่มต้นสำหรับผู้ใช้ใหม่:</span>
@@ -529,6 +540,71 @@
         let botChart = null;
         let dailyDepositChart = null;
         let monthlyDepositChart = null;
+        let isLoadingData = false; // เพิ่มตัวแปรเพื่อตรวจสอบสถานะการโหลดข้อมูล
+
+        async function toggleCaptcha() {
+            try {
+                const currentStatus = document.getElementById('captchaEnabledValue').textContent;
+                const newStatus = currentStatus === 'เปิดใช้งาน' ? 'ปิดใช้งาน' : 'เปิดใช้งาน';
+                
+                const response = await fetch('/admin/settings/captcha', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: newStatus === 'เปิดใช้งาน' })
+                });
+
+                if (!response.ok) throw new Error('ไม่สามารถเปลี่ยนสถานะระบบแคปซ่าได้');
+
+                document.getElementById('captchaEnabledValue').textContent = newStatus;
+                
+                // อัปเดตไอคอนปุ่มตามสถานะ
+                const buttonIcon = document.querySelector('button[onclick="toggleCaptcha()"] i');
+                if (newStatus === 'เปิดใช้งาน') {
+                    buttonIcon.className = 'fas fa-toggle-on';
+                } else {
+                    buttonIcon.className = 'fas fa-toggle-off';
+                }
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกการตั้งค่าสำเร็จ',
+                    text: `${newStatus === 'เปิดใช้งาน' ? 'เปิด' : 'ปิด'}ระบบยืนยันตัวตนแคปซ่าแล้ว`,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#00d4ff'
+                });
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error.message,
+                    background: '#1c1c2b',
+                    color: '#d9e1e8',
+                    confirmButtonColor: '#ff3366'
+                });
+            }
+        }
+
+        async function loadServerSettings() {
+            try {
+                const response = await fetch('/admin/settings/server');
+                if (response.ok) {
+                    const settings = await response.json();
+                    // อัปเดตสถานะแคปซ่าในหน้าเว็บ
+                    document.getElementById('captchaEnabledValue').textContent = 
+                        settings.captchaEnabled ? 'เปิดใช้งาน' : 'ปิดใช้งาน';
+                    
+                    // อัปเดตไอคอนปุ่มตามสถานะ
+                    const buttonIcon = document.querySelector('button[onclick="toggleCaptcha()"] i');
+                    buttonIcon.className = settings.captchaEnabled ? 'fas fa-toggle-on' : 'fas fa-toggle-off';
+                }
+            } catch (error) {
+                console.error('Error loading server settings:', error);
+            }
+        }
+
+        // เรียกใช้ฟังก์ชันโหลดการตั้งค่าเซิร์ฟเวอร์เมื่อหน้าเว็บโหลด
+        loadServerSettings();
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
@@ -800,16 +876,24 @@
             return new Intl.NumberFormat('th-TH').format(value);
         }
 
-        async function loadData() {
+        async function loadData(showLoadingAlert = true) {
+            // ถ้ากำลังโหลดข้อมูลอยู่ให้ยกเลิกการโหลดซ้ำ
+            if (isLoadingData) return;
+            
+            isLoadingData = true;
+            
             try {
-                // แสดง loading indicator
-                Swal.fire({
-                    title: 'กำลังโหลดข้อมูล...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
+                // แสดง loading indicator เฉพาะเมื่อต้องการ
+                let loadingSwal;
+                if (showLoadingAlert) {
+                    loadingSwal = Swal.fire({
+                        title: 'กำลังโหลดข้อมูล...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                }
 
                 const [usersResponse, botsResponse] = await Promise.all([
                     fetch('/admin/users').then(res => {
@@ -844,18 +928,28 @@
                 // โหลดข้อมูลประกาศด้วย
                 await loadAnnouncements();
 
-                // ปิด loading indicator และแสดงข้อความสำเร็จ
-                Swal.fire({
-                    icon: 'success',
-                    title: 'โหลดข้อมูลสำเร็จ',
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    background: '#1c1c2b',
-                    color: '#d9e1e8'
-                });
+                // ปิด loading indicator และแสดงข้อความสำเร็จเฉพาะเมื่อต้องการ
+                if (showLoadingAlert) {
+                    if (loadingSwal) {
+                        loadingSwal.close();
+                    }
+                    
+                    // แสดง Toast แทนการใช้ Swal เต็มจอ
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                        background: '#1c1c2b',
+                        color: '#d9e1e8'
+                    });
+                    
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'โหลดข้อมูลสำเร็จ'
+                    });
+                }
             } catch (error) {
                 console.error('Error loading data:', error);
                 
@@ -886,6 +980,8 @@
                         window.location.reload(); // รีเฟรชหน้าเว็บ
                     }
                 });
+            } finally {
+                isLoadingData = false; // รีเซ็ตสถานะการโหลด ไม่ว่าจะสำเร็จหรือล้มเหลว
             }
         }
 
@@ -1669,7 +1765,7 @@
         });
 
         function refreshData() {
-            loadData();
+            loadData(true); // เรียกโหลดข้อมูลโดยแสดง loading alert
         }
 
         async function removeCredits(username) {
@@ -2080,9 +2176,22 @@
         }
 
         // Initial load
-        loadData();
-        // Auto refresh every 30 seconds
-        setInterval(loadData, 30000);
+        loadData(true);
+        
+        // Auto refresh every 60 seconds แต่ไม่ต้องแสดง loading alert
+        let autoRefreshInterval = setInterval(() => loadData(false), 60000);
+        
+        // เพิ่มฟังก์ชันสำหรับหยุด/เริ่มการ auto refresh
+        function toggleAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                return false; // หยุดการ refresh อัตโนมัติแล้ว
+            } else {
+                autoRefreshInterval = setInterval(() => loadData(false), 60000);
+                return true; // เริ่มการ refresh อัตโนมัติแล้ว
+            }
+        }
 
         // Initialize with dashboard
         switchTab('dashboard');
